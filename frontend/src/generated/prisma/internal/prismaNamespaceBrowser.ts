@@ -54,7 +54,14 @@ export const ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  InterviewSession: 'InterviewSession',
+  evaluations: 'evaluations',
+  questions: 'questions',
+  recordings: 'recordings',
+  responses: 'responses',
+  schedules: 'schedules',
+  webhook_logs: 'webhook_logs'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -131,12 +138,124 @@ export const VerificationScalarFieldEnum = {
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
 
 
+export const InterviewSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  interviewType: 'interviewType',
+  role: 'role',
+  level: 'level',
+  stack: 'stack',
+  extraContext: 'extraContext',
+  stressMode: 'stressMode',
+  status: 'status',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type InterviewSessionScalarFieldEnum = (typeof InterviewSessionScalarFieldEnum)[keyof typeof InterviewSessionScalarFieldEnum]
+
+
+export const EvaluationsScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  scoreGlobal: 'scoreGlobal',
+  scoreClarity: 'scoreClarity',
+  scoreKnowledge: 'scoreKnowledge',
+  scoreConfidence: 'scoreConfidence',
+  scoreStructure: 'scoreStructure',
+  strengths: 'strengths',
+  weaknesses: 'weaknesses',
+  recommendation: 'recommendation',
+  createdAt: 'createdAt'
+} as const
+
+export type EvaluationsScalarFieldEnum = (typeof EvaluationsScalarFieldEnum)[keyof typeof EvaluationsScalarFieldEnum]
+
+
+export const QuestionsScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  questionText: 'questionText',
+  orderIndex: 'orderIndex',
+  isFollowup: 'isFollowup',
+  parentQuestionId: 'parentQuestionId',
+  createdAt: 'createdAt'
+} as const
+
+export type QuestionsScalarFieldEnum = (typeof QuestionsScalarFieldEnum)[keyof typeof QuestionsScalarFieldEnum]
+
+
+export const RecordingsScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  type: 'type',
+  referenceId: 'referenceId',
+  audioUrl: 'audioUrl',
+  durationSeconds: 'durationSeconds',
+  createdAt: 'createdAt'
+} as const
+
+export type RecordingsScalarFieldEnum = (typeof RecordingsScalarFieldEnum)[keyof typeof RecordingsScalarFieldEnum]
+
+
+export const ResponsesScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  questionId: 'questionId',
+  responseText: 'responseText',
+  audioUrl: 'audioUrl',
+  longPauseDetected: 'longPauseDetected',
+  fillerWordsDetected: 'fillerWordsDetected',
+  confidenceFlag: 'confidenceFlag',
+  createdAt: 'createdAt'
+} as const
+
+export type ResponsesScalarFieldEnum = (typeof ResponsesScalarFieldEnum)[keyof typeof ResponsesScalarFieldEnum]
+
+
+export const SchedulesScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  userId: 'userId',
+  scheduledAt: 'scheduledAt',
+  reminderEmailSent: 'reminderEmailSent',
+  reminderWhatsappSent: 'reminderWhatsappSent',
+  createdAt: 'createdAt'
+} as const
+
+export type SchedulesScalarFieldEnum = (typeof SchedulesScalarFieldEnum)[keyof typeof SchedulesScalarFieldEnum]
+
+
+export const Webhook_logsScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  flowName: 'flowName',
+  endpoint: 'endpoint',
+  requestPayload: 'requestPayload',
+  responsePayload: 'responsePayload',
+  status: 'status',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt'
+} as const
+
+export type Webhook_logsScalarFieldEnum = (typeof Webhook_logsScalarFieldEnum)[keyof typeof Webhook_logsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -153,4 +272,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

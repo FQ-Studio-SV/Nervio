@@ -61,3 +61,38 @@ export type Account = Prisma.AccountModel
  * 
  */
 export type Verification = Prisma.VerificationModel
+/**
+ * Model InterviewSession
+ * Sesión de simulación de entrevista (no confundir con Session de login).
+ */
+export type InterviewSession = Prisma.InterviewSessionModel
+/**
+ * Model evaluations
+ * 
+ */
+export type evaluations = Prisma.evaluationsModel
+/**
+ * Model questions
+ * 
+ */
+export type questions = Prisma.questionsModel
+/**
+ * Model recordings
+ * 
+ */
+export type recordings = Prisma.recordingsModel
+/**
+ * Model responses
+ * 
+ */
+export type responses = Prisma.responsesModel
+/**
+ * Model schedules
+ * 
+ */
+export type schedules = Prisma.schedulesModel
+/**
+ * Model webhook_logs
+ * 
+ */
+export type webhook_logs = Prisma.webhook_logsModel
