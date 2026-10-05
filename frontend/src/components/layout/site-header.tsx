@@ -8,6 +8,7 @@ import { authClient } from "@/lib/auth-client";
 
 const navLinks = [
   { href: "/", label: "Inicio" },
+  { href: "/interview/setup", label: "Practicar", requiresAuth: true },
   { href: "#", label: "Metodología" },
   { href: "#", label: "Precios" },
 ];
@@ -37,16 +38,19 @@ export function SiteHeader() {
       </Link>
 
       <nav className="hidden gap-12 md:flex">
-        {navLinks.map((link) => (
-          <Link
-            key={link.label}
-            href={link.href}
-            className="text-sm font-medium tracking-wide text-muted-foreground transition-colors hover:text-primary data-[active=true]:border-b-2 data-[active=true]:border-primary data-[active=true]:pb-1 data-[active=true]:font-bold data-[active=true]:text-primary"
-            data-active={link.href === "/" ? true : undefined}
-          >
-            {link.label}
-          </Link>
-        ))}
+        {navLinks.map((link) => {
+          if (link.requiresAuth && !session) return null;
+          return (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="text-sm font-medium tracking-wide text-muted-foreground transition-colors hover:text-primary data-[active=true]:border-b-2 data-[active=true]:border-primary data-[active=true]:pb-1 data-[active=true]:font-bold data-[active=true]:text-primary"
+              data-active={link.href === "/" ? true : undefined}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="flex items-center gap-4">

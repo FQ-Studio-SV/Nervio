@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { FeatureCards } from "@/components/layout/feature-cards";
 import { AuthBackground } from "@/components/layout/auth-background";
+import { HomeHeroActions } from "@/components/layout/home-hero-actions";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
   return (
     <>
       <AuthBackground />
@@ -31,18 +37,7 @@ export default function HomePage() {
             recibe feedback instantáneo basado en datos reales de reclutamiento.
           </p>
 
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-            <Button size="lg" render={<Link href="/register" />}>
-              Empezar gratis
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              render={<Link href="/login" />}
-            >
-              Iniciar sesión
-            </Button>
-          </div>
+          <HomeHeroActions isAuthenticated={!!session} />
 
           <p className="mt-6 text-sm text-muted-foreground">
             Únete a +2.000 profesionales

@@ -187,3 +187,123 @@
     opacity: 0.8;
   }
 }
+
+@keyframes orb-idle {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes orb-speak {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 40px rgba(47, 217, 244, 0.4);
+  }
+  25% {
+    transform: scale(1.12);
+    box-shadow: 0 0 60px rgba(47, 217, 244, 0.6);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 50px rgba(221, 183, 255, 0.5);
+  }
+  75% {
+    transform: scale(1.14);
+    box-shadow: 0 0 70px rgba(47, 217, 244, 0.55);
+  }
+}
+
+@keyframes orb-listen {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 30px rgba(221, 183, 255, 0.35);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 45px rgba(221, 183, 255, 0.55);
+  }
+}
+
+@keyframes orb-think {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.04) rotate(180deg);
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+@keyframes orb-ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .interview-orb-core {
+    background: radial-gradient(
+      circle at 35% 35%,
+      rgba(162, 238, 255, 0.95) 0%,
+      rgba(138, 235, 255, 0.7) 30%,
+      rgba(111, 0, 190, 0.5) 70%,
+      rgba(47, 217, 244, 0.3) 100%
+    );
+  }
+
+  .interview-orb-halo {
+    background: radial-gradient(
+      circle,
+      rgba(47, 217, 244, 0.25) 0%,
+      transparent 70%
+    );
+    filter: blur(20px);
+  }
+
+  .orb-state-idle .interview-orb-core {
+    animation: orb-idle 4s ease-in-out infinite;
+  }
+
+  .orb-state-speaking .interview-orb-core {
+    animation: orb-speak 1.2s ease-in-out infinite;
+  }
+
+  .orb-state-listening .interview-orb-core {
+    animation: orb-listen 2s ease-in-out infinite;
+    background: radial-gradient(
+      circle at 35% 35%,
+      rgba(221, 183, 255, 0.9) 0%,
+      rgba(138, 235, 255, 0.6) 40%,
+      rgba(111, 0, 190, 0.45) 100%
+    );
+  }
+
+  .orb-state-thinking .interview-orb-core {
+    animation: orb-think 3s linear infinite;
+    opacity: 0.9;
+  }
+
+  .orb-ripple-ring {
+    animation: orb-ripple 2s ease-out infinite;
+  }
+
+  .orb-ripple-ring-delayed {
+    animation: orb-ripple 2s ease-out infinite;
+    animation-delay: 0.6s;
+  }
+}

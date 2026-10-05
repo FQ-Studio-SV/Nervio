@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { AuthCard } from "@/components/auth/auth-card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,7 @@ import {
   type RegisterFormValues,
   registerSchema,
 } from "@/lib/validations/auth";
+import { createZodResolver } from "@/lib/validations/create-zod-resolver";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export function RegisterForm() {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: createZodResolver(registerSchema),
     defaultValues: {
       name: "",
       email: "",
