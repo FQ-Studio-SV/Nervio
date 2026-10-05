@@ -1,43 +1,24 @@
 import {
   getMockQuestions,
   MOCK_ANSWER_PLACEHOLDERS,
-  SESSION_STORAGE_KEY,
 } from "./constants";
 import type { InterviewService } from "./interview-service";
+import {
+  getSession,
+  getSessionMessages,
+  getSessionSetup,
+  persistStartSession,
+  saveSession,
+} from "./session-storage";
 import type {
   InterviewReport,
   InterviewSetupInput,
   InterviewTurn,
-  MockSessionState,
+  StartInterviewResponse,
 } from "./types";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function readSessions(): Record<string, MockSessionState> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, MockSessionState>) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeSessions(sessions: Record<string, MockSessionState>) {
-  if (typeof window === "undefined") return;
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessions));
-}
-
-function getSession(sessionId: string): MockSessionState | null {
-  return readSessions()[sessionId] ?? null;
-}
-
-function saveSession(session: MockSessionState) {
-  const sessions = readSessions();
-  sessions[session.id] = session;
-  writeSessions(sessions);
 }
 
 function buildGreeting(setup: InterviewSetupInput): string {
@@ -51,9 +32,12 @@ function buildGreeting(setup: InterviewSetupInput): string {
   return `Hola ${setup.candidateName}, soy tu entrevistador virtual. Hoy tendremos una entrevista ${typeLabels[setup.interviewType]} para el puesto de ${setup.role}. Cuando estés listo, responde la primera pregunta.`;
 }
 
-function generateMockReport(session: MockSessionState): InterviewReport {
+function generateMockReport(session: ReturnType<typeof getSession>) {
+  if (!session) throw new Error("Sesión no encontrada");
+
   const base = 65 + Math.floor(Math.random() * 25);
-  const variance = () => Math.max(50, Math.min(98, base + Math.floor(Math.random() * 16) - 8));
+  const variance = () =>
+    Math.max(50, Math.min(98, base + Math.floor(Math.random() * 16) - 8));
 
   const typeModifiers: Record<
     InterviewSetupInput["interviewType"],
@@ -111,7 +95,7 @@ function generateMockReport(session: MockSessionState): InterviewReport {
 
   const mod = typeModifiers[session.setup.interviewType];
 
-  return {
+  const report: InterviewReport = {
     sessionId: session.id,
     scoreGlobal: base,
     scoreClarity: variance(),
@@ -125,22 +109,39 @@ function generateMockReport(session: MockSessionState): InterviewReport {
     role: session.setup.role,
     candidateName: session.setup.candidateName,
   };
+
+  return report;
 }
 
 export const mockInterviewService: InterviewService = {
-  async start(input) {
+  async start(input): Promise<StartInterviewResponse> {
     await delay(400);
     const sessionId = crypto.randomUUID();
-    const session: MockSessionState = {
-      id: sessionId,
-      setup: input,
-      messages: [],
-      questionIndex: 0,
-      startedAt: Date.now(),
-      status: "active",
+    const questions = getMockQuestions(input.interviewType).map((text, i) => ({
+      session_id: sessionId,
+      question_text: text,
+      order_index: i + 1,
+      is_followup: false,
+    }));
+    const firstQuestion = questions[0]?.question_text ?? "Cuéntame sobre ti.";
+
+    persistStartSession(input, {
+      sessionId,
+      questions,
+      firstQuestionText: firstQuestion,
+      audioUrl: null,
+    });
+
+    return {
+      sessionId,
+      questions,
+      question: {
+        text: firstQuestion,
+        order_index: 1,
+        is_followup: false,
+      },
+      audioUrl: null,
     };
-    saveSession(session);
-    return { sessionId };
   },
 
   async getOpeningQuestion(sessionId) {
@@ -149,28 +150,33 @@ export const mockInterviewService: InterviewService = {
     if (!session) throw new Error("Sesión no encontrada");
 
     const greeting = buildGreeting(session.setup);
-    const questions = getMockQuestions(session.setup.interviewType);
-    const firstQuestion = questions[0] ?? "Cuéntame sobre ti.";
+    const firstQuestion =
+      session.questions[0]?.question_text ??
+      getMockQuestions(session.setup.interviewType)[0] ??
+      "Cuéntame sobre ti.";
 
-    session.messages.push(
-      {
-        id: crypto.randomUUID(),
-        role: "interviewer",
-        text: greeting,
-        timestamp: Date.now(),
-      },
-      {
-        id: crypto.randomUUID(),
-        role: "interviewer",
-        text: firstQuestion,
-        timestamp: Date.now() + 1,
-      },
-    );
-    saveSession(session);
+    if (session.messages.length === 0) {
+      session.messages.push(
+        {
+          id: crypto.randomUUID(),
+          role: "interviewer",
+          text: greeting,
+          timestamp: Date.now(),
+        },
+        {
+          id: crypto.randomUUID(),
+          role: "interviewer",
+          text: firstQuestion,
+          timestamp: Date.now() + 1,
+        },
+      );
+      saveSession(session);
+    }
+
     return firstQuestion;
   },
 
-  async sendMessage(sessionId, payload) {
+  async sendMessage(sessionId, payload): Promise<InterviewTurn> {
     await delay(600);
     const session = getSession(sessionId);
     if (!session) throw new Error("Sesión no encontrada");
@@ -192,7 +198,15 @@ export const mockInterviewService: InterviewService = {
     });
 
     session.questionIndex += 1;
-    const questions = getMockQuestions(session.setup.interviewType);
+    const questions =
+      session.questions.length > 0
+        ? session.questions
+        : getMockQuestions(session.setup.interviewType).map((text, i) => ({
+            session_id: sessionId,
+            question_text: text,
+            order_index: i + 1,
+            is_followup: false,
+          }));
 
     if (session.questionIndex >= questions.length) {
       session.status = "ended";
@@ -204,13 +218,13 @@ export const mockInterviewService: InterviewService = {
     session.messages.push({
       id: crypto.randomUUID(),
       role: "interviewer",
-      text: nextQuestion,
+      text: nextQuestion.question_text,
       timestamp: Date.now(),
     });
     saveSession(session);
 
     return {
-      interviewerMessage: nextQuestion,
+      interviewerMessage: nextQuestion.question_text,
       isComplete: false,
       phase: "speaking",
     };
@@ -233,10 +247,4 @@ export const mockInterviewService: InterviewService = {
   },
 };
 
-export function getMockSessionMessages(sessionId: string) {
-  return getSession(sessionId)?.messages ?? [];
-}
-
-export function getMockSessionSetup(sessionId: string) {
-  return getSession(sessionId)?.setup ?? null;
-}
+export { getSessionMessages as getMockSessionMessages, getSessionSetup as getMockSessionSetup };

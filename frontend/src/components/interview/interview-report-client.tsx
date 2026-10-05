@@ -13,7 +13,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { INTERVIEW_TYPE_OPTIONS, mockInterviewService } from "@/lib/interview";
+import { INTERVIEW_TYPE_OPTIONS, interviewService } from "@/lib/interview";
 import type { InterviewReport } from "@/lib/interview/types";
 
 interface InterviewReportClientProps {
@@ -93,7 +93,7 @@ export function InterviewReportClient({ sessionId }: InterviewReportClientProps)
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    mockInterviewService
+    interviewService
       .getReport(sessionId)
       .then(setReport)
       .catch(() => setError("No se encontró el reporte de esta sesión."));

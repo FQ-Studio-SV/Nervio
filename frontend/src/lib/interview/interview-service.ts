@@ -2,10 +2,11 @@ import type {
   InterviewReport,
   InterviewSetupInput,
   InterviewTurn,
+  StartInterviewResponse,
 } from "./types";
 
 export interface InterviewService {
-  start(input: InterviewSetupInput): Promise<{ sessionId: string }>;
+  start(input: InterviewSetupInput): Promise<StartInterviewResponse>;
   sendMessage(
     sessionId: string,
     payload: { text?: string; audioBlob?: Blob },
