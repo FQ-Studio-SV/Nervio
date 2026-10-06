@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nervio AI | Domina tus entrevistas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Sora:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .glass-panel {
+            background: rgba(15, 19, 29, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(47, 217, 244, 0.15);
+        }
+
+        .voice-sphere {
+            background: radial-gradient(circle, rgba(138, 235, 255, 0.8) 0%, rgba(111, 0, 190, 0.4) 100%);
+            filter: blur(40px);
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .grid-background {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #a2eeff 0%, #ddb7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#a2eeff",
+                        "surface-dim": "#0f131d",
+                        "surface-container-highest": "#313540",
+                        "outline": "#859397",
+                        "on-error-container": "#ffdad6",
+                        "outline-variant": "#3c494c",
+                        "surface-variant": "#313540",
+                        "on-primary-container": "#005763",
+                        "on-secondary": "#490080",
+                        "on-surface-variant": "#bbc9cd",
+                        "on-primary-fixed-variant": "#004e5a",
+                        "inverse-on-surface": "#2c303b",
+                        "primary-fixed-dim": "#2fd9f4",
+                        "primary": "#8aebff",
+                        "on-background": "#dfe2f1",
+                        "tertiary-fixed-dim": "#ffb2b7",
+                        "tertiary-fixed": "#ffdadb",
+                        "surface-container-low": "#171b26",
+                        "on-secondary-fixed": "#2c0051",
+                        "secondary-fixed": "#f0dbff",
+                        "surface-tint": "#2fd9f4",
+                        "on-error": "#690005",
+                        "error": "#ffb4ab",
+                        "on-surface": "#dfe2f1",
+                        "surface-container-lowest": "#0a0e18",
+                        "on-secondary-fixed-variant": "#6900b3",
+                        "on-secondary-container": "#d6a9ff",
+                        "on-primary": "#00363e",
+                        "background": "#0f131d",
+                        "on-tertiary-container": "#a0002f",
+                        "on-tertiary": "#67001b",
+                        "on-tertiary-fixed": "#40000d",
+                        "surface-bright": "#353944",
+                        "surface-container": "#1c1f2a",
+                        "inverse-surface": "#dfe2f1",
+                        "error-container": "#93000a",
+                        "on-primary-fixed": "#001f25",
+                        "inverse-primary": "#006877",
+                        "surface": "#0f131d",
+                        "secondary-container": "#6f00be",
+                        "tertiary-container": "#ffaaaf",
+                        "on-tertiary-fixed-variant": "#92002a",
+                        "tertiary": "#ffd2d3",
+                        "secondary": "#ddb7ff",
+                        "surface-container-high": "#262a35",
+                        "primary-container": "#22d3ee",
+                        "secondary-fixed-dim": "#ddb7ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "8px",
+                        "md": "24px",
+                        "xl": "80px",
+                        "lg": "48px",
+                        "sm": "16px",
+                        "container-max": "1280px",
+                        "base": "4px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Sora"],
+                        "headline-md": ["Sora"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "code": ["JetBrains Mono"],
+                        "headline-xl": ["Sora"],
+                        "headline-lg": ["Sora"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "code": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary/30 selection:text-primary-fixed overflow-x-hidden">
+<!-- Background Layer -->
+<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute inset-0 grid-background opacity-20"></div>
+<div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] voice-sphere"></div>
+<div class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] voice-sphere" style="animation-delay: -2s; background: radial-gradient(circle, rgba(221, 183, 255, 0.4) 0%, rgba(47, 217, 244, 0.2) 100%);"></div>
+<div class="absolute inset-0" id="particle-container"></div>
+</div>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-md lg:px-xl h-xl bg-surface/40 backdrop-blur-md border-b border-white/5">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">neurology</span>
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Nervio</span>
+</div>
+<nav class="hidden md:flex gap-lg">
+<a class="font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-1" href="#">Inicio</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-all" href="#">Metodología</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-all" href="#">Precios</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="hidden md:flex font-label-md text-label-md text-on-surface-variant hover:text-primary px-sm py-xs transition-colors">Log In</button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-md py-xs rounded-xl hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-primary/20">
+                Empezar Gratis
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="relative z-10 pt-xl min-h-screen flex flex-col items-center justify-center container mx-auto px-md">
+<div class="w-full max-w-container-max grid lg:grid-cols-2 gap-xl items-center">
+<!-- Hero Content -->
+<div class="flex flex-col space-y-lg text-center lg:text-left">
+<div class="inline-flex items-center self-center lg:self-start gap-xs bg-secondary-container/20 border border-secondary/20 px-sm py-1 rounded-full text-secondary text-sm font-label-md">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+                    Nuevos escenarios de Stress Mode disponibles
+                </div>
+<h1 class="font-headline-xl text-headline-xl lg:text-[64px] leading-tight gradient-text">
+                    Domina tus entrevistas con IA en tiempo real.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto lg:mx-0">
+                    Interactúa por voz con simuladores avanzados. Supera el <span class="text-error font-semibold">Stress Mode</span> y recibe feedback instantáneo basado en datos reales de reclutamiento.
+                </p>
+<div class="flex flex-col sm:flex-row gap-md justify-center lg:justify-start pt-md">
+<div class="flex flex-col items-center lg:items-start gap-xs">
+<div class="flex -space-x-2">
+<div class="w-10 h-10 rounded-full border-2 border-surface bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up portrait of a professional female tech recruiter in a modern office, soft lighting, 8k resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfHnxC1TRUX1tlJjINFMZVAhdLNx30HmGYmu7rbVkfzg2EQ3GaRF2GEpR5iewmj2iOQwJPrHvPqT0dcJNdw9EEQltdMp1RIW8MI7FAfBQedqB_e3iZw3mc_hHbjLmP8VJuVehW-3EIG11RnANuHlpdOQ1Pw7dZcRDVxH5wSqAFgbxTTACZLwRvOlON6O84d1nHL1XM01ay50fnlkZ2ij3qfxa05NA1WL01gFYU7LAcGgPEtFLD8PyP2w"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-surface bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a diverse young professional man smiling confidently, corporate tech environment, cinematic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCp_QfVeiG2X7YvHN1CKCw9aPUcmIYkbPyKWfirO0Kli6vWZWTOLgvNoYg_WTqwVzMCBVw5b9o8d5K0EQzBd4805f4jqgGI5BFJLMiQUoLA71jGXVqpksj-_F79X5m-2N_sfG-0xMDdbYaLZRg6A6t6_26lNYMSAVFmit7fFasrn5ezEnUVFsaDhKzEkrEOlKRDreE6r6rA_Bu0DOPcgv5rCPydnStESJDIiCc6HdhY71WotniC-tcmnA"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-surface bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Professional studio headshot of a middle-aged male engineer with glasses, neutral tech background, high-end photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcRMjAgat7w4GXeEhJXh4LzBiKvq1ygHJovZG3vO8zf0Bg97SWRPdP1eP3XndIhPw9tuUvt_a0UfBxjFNB5FKnpMrnt8bxGda2AHe6byIPf-7koVKp-SIHvwahChcv_HifeatZo6Xomppx30ibDno2KWV00BSjCnmbjZ_myYZBun42Y_-93zmWZPYiO_yrthdTI5BTTKOisU-8TDwBa_9bVpiJWttHXYIzlT3FKeD8cWf5lIdVHNYjXA"/>
+</div>
+</div>
+<p class="text-sm font-label-md text-on-surface-variant">Únete a +2,000 profesionales</p>
+</div>
+</div>
+</div>
+<!-- Login Card -->
+<div class="w-full max-w-md mx-auto">
+<div class="glass-panel p-lg rounded-2xl glow-cyan flex flex-col space-y-md">
+<div class="text-center space-y-xs">
+<h2 class="font-headline-md text-headline-md text-on-surface">Bienvenido de nuevo</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Elige tu método preferido para entrar</p>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<button class="flex items-center justify-center gap-xs py-sm border border-white/10 rounded-xl hover:bg-white/5 transition-colors">
+<svg class="w-5 h-5" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"></path>
+</svg>
+<span class="font-label-md text-label-md">Google</span>
+</button>
+<button class="flex items-center justify-center gap-xs py-sm border border-white/10 rounded-xl hover:bg-white/5 transition-colors">
+<svg class="w-5 h-5 fill-on-surface" viewbox="0 0 24 24">
+<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.416-4.041-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path>
+</svg>
+<span class="font-label-md text-label-md">GitHub</span>
+</button>
+</div>
+<div class="relative py-xs">
+<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/5"></div></div>
+<div class="relative flex justify-center text-xs"><span class="bg-surface-container-low px-sm text-on-surface-variant font-label-md">O continúa con email</span></div>
+</div>
+<div class="space-y-sm">
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Correo Electrónico</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary transition-all text-on-surface py-sm px-0 placeholder:text-outline-variant" placeholder="nombre@empresa.com" type="email"/>
+</div>
+<button class="w-full bg-surface-bright text-on-surface font-label-md text-label-md py-sm rounded-xl border border-white/10 hover:bg-white/5 transition-all">
+                            Enviar enlace mágico
+                        </button>
+</div>
+<p class="text-xs text-on-surface-variant text-center pt-xs">
+                        Al continuar, aceptas nuestros <a class="text-primary hover:underline" href="#">Términos de Servicio</a> y <a class="text-primary hover:underline" href="#">Política de Privacidad</a>.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Floating Action Indicators -->
+<div class="mt-xl grid grid-cols-2 lg:grid-cols-4 gap-md w-full max-w-container-max pb-xl">
+<div class="glass-panel p-sm rounded-xl flex items-center gap-sm">
+<div class="p-xs bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">mic</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Voz IA</h4>
+<p class="text-xs text-on-surface-variant">Procesamiento natural</p>
+</div>
+</div>
+<div class="glass-panel p-sm rounded-xl flex items-center gap-sm">
+<div class="p-xs bg-error/10 rounded-lg text-error">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Stress Mode</h4>
+<p class="text-xs text-on-surface-variant">Entrenamiento bajo presión</p>
+</div>
+</div>
+<div class="glass-panel p-sm rounded-xl flex items-center gap-sm">
+<div class="p-xs bg-secondary/10 rounded-lg text-secondary">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Análisis</h4>
+<p class="text-xs text-on-surface-variant">Métricas detalladas</p>
+</div>
+</div>
+<div class="glass-panel p-sm rounded-xl flex items-center gap-sm">
+<div class="p-xs bg-primary-fixed-dim/10 rounded-lg text-primary-fixed-dim">
+<span class="material-symbols-outlined">terminal</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Técnico</h4>
+<p class="text-xs text-on-surface-variant">Desafíos de código</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="relative z-10 w-full border-t border-white/5 py-lg px-md lg:px-xl">
+<div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="flex items-center gap-xs grayscale opacity-50">
+<span class="material-symbols-outlined text-on-surface text-xl">neurology</span>
+<span class="font-headline-md text-sm font-bold text-on-surface">Nervio AI</span>
+</div>
+<p class="font-label-md text-xs text-on-surface-variant">© 2024 Nervio AI. Forjado para el éxito profesional.</p>
+<div class="flex gap-lg">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-lg">language</span></a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-lg">hub</span></a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-lg">public</span></a>
+</div>
+</div>
+</footer>
+<!-- Micro-interaction Particles Script -->
+<script>
+        const container = document.getElementById('particle-container');
+        const particleCount = 40;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'absolute bg-primary/20 rounded-full pointer-events-none';
+            const size = Math.random() * 4 + 2;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            const startX = Math.random() * 100;
+            const startY = Math.random() * 100;
+            particle.style.left = `${startX}%`;
+            particle.style.top = `${startY}%`;
+            
+            container.appendChild(particle);
+
+            // Simple drift animation
+            const duration = Math.random() * 10 + 10;
+            particle.animate([
+                { transform: 'translate(0, 0)', opacity: 0 },
+                { transform: `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px)`, opacity: 0.5 },
+                { transform: `translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px)`, opacity: 0 }
+            ], {
+                duration: duration * 1000,
+                iterations: Infinity,
+                easing: 'ease-in-out'
+            });
+        }
+    </script>
+</body></html>
