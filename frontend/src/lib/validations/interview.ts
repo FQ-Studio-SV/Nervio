@@ -6,6 +6,9 @@ export const interviewSetupSchema = z.object({
   level: z.enum(["junior", "mid", "senior"], {
     message: "Selecciona tu nivel de experiencia",
   }),
+  language: z.enum(["es", "en", "pt"], {
+    message: "Selecciona el idioma de la entrevista",
+  }),
   interviewType: z.enum(["hr", "tecnico", "no_tecnico", "agresivo"], {
     message: "Selecciona un tipo de entrevista",
   }),
