@@ -2,6 +2,8 @@ export type InterviewType = "hr" | "tecnico" | "no_tecnico" | "agresivo";
 
 export type ExperienceLevel = "junior" | "mid" | "senior";
 
+export type InterviewLanguage = "es" | "en" | "pt";
+
 export type InterviewPhase =
   | "connecting"
   | "speaking"
@@ -15,6 +17,7 @@ export interface InterviewSetupInput {
   role: string;
   candidateName: string;
   level: ExperienceLevel;
+  language: InterviewLanguage;
   interviewType: InterviewType;
   stack?: string;
   extraContext: string;

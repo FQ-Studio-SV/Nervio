@@ -5,6 +5,7 @@ export interface N8nGenerateInterviewBody {
   interview_type: InterviewSetupInput["interviewType"];
   role: string;
   level: InterviewSetupInput["level"];
+  language: InterviewSetupInput["language"];
   stack: string | null;
   extra_context: string;
   stress_mode: boolean;
@@ -38,6 +39,7 @@ export function toN8nGenerateInterviewPayload(
     interview_type: form.interviewType,
     role: form.role,
     level: form.level,
+    language: form.language,
     stack: form.stack?.trim() || null,
     extra_context: buildExtraContext(form),
     stress_mode: form.interviewType === "agresivo",
