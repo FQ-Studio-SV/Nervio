@@ -1,42 +1,33 @@
 "use client";
 
-import {
-  IconMicrophone,
-  IconMicrophoneOff,
-  IconPhoneOff,
-  IconSend,
-} from "@tabler/icons-react";
+import { IconMicrophone, IconMicrophoneOff, IconPhoneOff } from "@tabler/icons-react";
 import type { InterviewPhase } from "@/lib/interview/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 interface InterviewControlsProps {
   phase: InterviewPhase;
-  isMicActive: boolean;
-  answerText: string;
-  onAnswerTextChange: (value: string) => void;
-  onToggleMic: () => void;
-  onSubmitAnswer: () => void;
-  onEndInterview: () => void;
+  isMuted: boolean;
   isBusy: boolean;
+  connectionLabel: string;
+  error?: string | null;
+  onToggleMute: () => void;
+  onEndInterview: () => void;
   className?: string;
 }
 
 export function InterviewControls({
   phase,
-  isMicActive,
-  answerText,
-  onAnswerTextChange,
-  onToggleMic,
-  onSubmitAnswer,
-  onEndInterview,
+  isMuted,
   isBusy,
+  connectionLabel,
+  error,
+  onToggleMute,
+  onEndInterview,
   className,
 }: InterviewControlsProps) {
-  const canRespond =
-    !isBusy && (phase === "speaking" || phase === "listening");
+  const isLive = phase !== "connecting" && phase !== "ended" && !error;
 
   return (
     <div
@@ -45,31 +36,19 @@ export function InterviewControls({
         className,
       )}
     >
-      <div className="flex gap-2">
-        <Input
-          value={answerText}
-          onChange={(e) => onAnswerTextChange(e.target.value)}
-          placeholder="Escribe tu respuesta (opcional en demo)..."
-          disabled={!canRespond}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && canRespond) onSubmitAnswer();
-          }}
-        />
-        <Button
-          type="button"
-          size="icon"
-          variant={isMicActive ? "default" : "outline"}
-          onClick={onToggleMic}
-          disabled={!canRespond}
-          aria-label={isMicActive ? "Desactivar micrófono" : "Activar micrófono"}
-        >
-          {isMicActive ? (
-            <IconMicrophone className="size-4" />
-          ) : (
-            <IconMicrophoneOff className="size-4" />
+      <div className="flex items-center justify-center gap-2">
+        <span
+          className={cn(
+            "size-2 rounded-full",
+            isLive ? "animate-pulse bg-emerald-500" : "bg-muted-foreground",
           )}
-        </Button>
+        />
+        <p className="text-sm text-muted-foreground">{connectionLabel}</p>
       </div>
+
+      {error ? (
+        <p className="text-center text-sm text-destructive">{error}</p>
+      ) : null}
 
       <div className="flex items-center justify-between gap-3">
         <Button
@@ -85,21 +64,24 @@ export function InterviewControls({
 
         <Button
           type="button"
-          onClick={onSubmitAnswer}
-          disabled={!canRespond}
+          variant={isMuted ? "outline" : "default"}
+          size="icon"
+          onClick={onToggleMute}
+          disabled={!isLive || isBusy}
+          aria-label={isMuted ? "Activar micrófono" : "Silenciar micrófono"}
         >
-          {isBusy ? (
-            <Spinner data-icon="inline-start" />
+          {isMuted ? (
+            <IconMicrophoneOff className="size-4" />
           ) : (
-            <IconSend className="size-4" data-icon="inline-start" />
+            <IconMicrophone className="size-4" />
           )}
-          Enviar respuesta
         </Button>
+
+        {isBusy ? <Spinner className="size-5" /> : null}
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
-        {/* TODO: integrar MediaRecorder + playback ElevenLabs */}
-        Demo simulada — el micrófono es visual por ahora
+        Conversación por voz con el agente ElevenLabs — habla cuando el orbe esté en modo escucha
       </p>
     </div>
   );

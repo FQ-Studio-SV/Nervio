@@ -20,12 +20,11 @@ interface InterviewLiveShellProps {
   orbState: OrbState;
   currentQuestion: string;
   messages: import("@/lib/interview/types").InterviewMessage[];
-  answerText: string;
-  isMicActive: boolean;
+  isMuted: boolean;
   isBusy: boolean;
-  onAnswerTextChange: (value: string) => void;
-  onToggleMic: () => void;
-  onSubmitAnswer: () => void;
+  connectionLabel: string;
+  error?: string | null;
+  onToggleMute: () => void;
   onEndInterview: () => void;
 }
 
@@ -44,12 +43,11 @@ export function InterviewLiveShell({
   orbState,
   currentQuestion,
   messages,
-  answerText,
-  isMicActive,
+  isMuted,
   isBusy,
-  onAnswerTextChange,
-  onToggleMic,
-  onSubmitAnswer,
+  connectionLabel,
+  error,
+  onToggleMute,
   onEndInterview,
 }: InterviewLiveShellProps) {
   const typeLabel =
@@ -80,7 +78,15 @@ export function InterviewLiveShell({
 
         <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8">
           <InterviewOrb state={orbState} />
-          <InterviewBubble text={currentQuestion} phase={phase} />
+          <InterviewBubble
+            text={
+              currentQuestion ||
+              (phase === "connecting"
+                ? "Conectando con el entrevistador..."
+                : "La conversación está en curso")
+            }
+            phase={phase}
+          />
           <InterviewTimeline messages={messages} />
         </main>
 
@@ -88,13 +94,12 @@ export function InterviewLiveShell({
           <div className="mx-auto flex justify-center">
             <InterviewControls
               phase={phase}
-              isMicActive={isMicActive}
-              answerText={answerText}
-              onAnswerTextChange={onAnswerTextChange}
-              onToggleMic={onToggleMic}
-              onSubmitAnswer={onSubmitAnswer}
-              onEndInterview={onEndInterview}
+              isMuted={isMuted}
               isBusy={isBusy}
+              connectionLabel={connectionLabel}
+              error={error}
+              onToggleMute={onToggleMute}
+              onEndInterview={onEndInterview}
             />
           </div>
           <p className="mt-3 text-center text-xs text-muted-foreground/60">
