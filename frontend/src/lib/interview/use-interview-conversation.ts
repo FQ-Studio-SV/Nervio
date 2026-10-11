@@ -7,6 +7,7 @@ import {
   getSessionSetup,
   saveSession,
 } from "./session-storage";
+import { interviewService } from "./service-factory";
 import type {
   InterviewMessage,
   InterviewPhase,
@@ -104,6 +105,12 @@ export function useInterviewConversation(sessionId: string) {
       if (role === "interviewer") {
         setCurrentQuestion(trimmed);
       }
+
+      void interviewService
+        .sendMessage(sessionId, { role, text: trimmed })
+        .catch((err) => {
+          console.error("No se pudo persistir mensaje de entrevista:", err);
+        });
     },
     [sessionId],
   );

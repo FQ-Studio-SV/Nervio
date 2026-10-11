@@ -14,6 +14,9 @@ import type {
   InterviewReport,
   InterviewSetupInput,
   InterviewTurn,
+  PersistedInterviewSession,
+  ScheduleInterviewInput,
+  ScheduleInterviewResponse,
   StartInterviewResponse,
 } from "./types";
 
@@ -244,6 +247,33 @@ export const mockInterviewService: InterviewService = {
     const session = getSession(sessionId);
     if (!session) throw new Error("Sesión no encontrada");
     return generateMockReport(session);
+  },
+
+  async getSession(sessionId): Promise<PersistedInterviewSession> {
+    await delay(100);
+    const session = getSession(sessionId);
+    if (!session) throw new Error("Sesión no encontrada");
+    return {
+      id: session.id,
+      setup: session.setup,
+      messages: session.messages,
+      questions: session.questions,
+      status: session.status,
+      startedAt: session.startedAt,
+      scheduledAt: null,
+    };
+  },
+
+  async schedule(
+    input: ScheduleInterviewInput,
+  ): Promise<ScheduleInterviewResponse> {
+    await delay(300);
+    const sessionId = crypto.randomUUID();
+    return {
+      sessionId,
+      scheduleId: crypto.randomUUID(),
+      scheduledAt: input.scheduledAt,
+    };
   },
 };
 

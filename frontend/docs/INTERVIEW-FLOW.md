@@ -39,10 +39,10 @@ interface InterviewService {
 
 ### Implementación actual
 
-- **API (default):** `src/lib/interview/api-service.ts` → `POST /api/interview/start`
+- **API (default):** `src/lib/interview/api-service.ts` → rutas Next.js en `src/app/api/interview`
 - **Mock (fallback):** `NEXT_PUBLIC_USE_MOCK_INTERVIEW=true` → `mockInterviewService`
 - **Factory:** `getInterviewService()` en `src/lib/interview/service-factory.ts`
-- **Estado cliente:** `sessionStorage` vía `session-storage.ts`
+- **Persistencia:** Prisma es fuente de verdad; `sessionStorage` queda como caché UX
 
 ### Integración N8N Flujo 1 (implementado)
 
@@ -58,10 +58,11 @@ Variables de entorno: ver `frontend/.env.example`
 
 | Método | Endpoint | Estado |
 |--------|----------|--------|
-| `start()` | `POST /api/interview/start` | Implementado (N8N + ElevenLabs) |
-| `sendMessage()` | `POST /interview/message` | Pendiente (mock local) |
-| `end()` | `POST /interview/end` | Pendiente (mock local) |
-| `getReport()` | N8N `/final-report` | Pendiente |
+| `start()` | `POST /api/interview/start` | Implementado (Prisma + N8N opcional) |
+| `sendMessage()` | `POST /api/interview/[sessionId]/messages` | Implementado (Prisma) |
+| `end()` | `POST /api/interview/[sessionId]/end` | Implementado (evaluación local + Prisma) |
+| `getReport()` | `GET /api/interview/[sessionId]/report` | Implementado (Prisma) |
+| `schedule()` | `POST /api/interview/schedule` | Implementado (Prisma + N8N opcional) |
 
 Ver también: `frontend/docs/N8N-TABLE-ALIGNMENT.md`
 
@@ -120,11 +121,9 @@ src/components/interview/
 
 3. **WebSocket** — opcional para tiempo real; el hook `useInterviewSession` puede suscribirse a eventos en lugar del flujo secuencial mock.
 
-4. **N8N** — `start()` y `end()` deben llamar webhooks según `project-flow.md`:
-   - `/generate-interview` al iniciar
-   - `/final-report` al finalizar
+4. **N8N** — queda secundario para generación/correos. Si webhooks no están configurados, Next.js usa fallback local y sigue guardando en Prisma.
 
-5. **Persistencia** — reemplazar `sessionStorage` por respuestas del backend + Prisma.
+5. **Persistencia** — Prisma guarda sesiones, preguntas, respuestas, evaluaciones y citas. `sessionStorage` solo acelera la UX.
 
 ## Cómo probar el flujo simulado
 
