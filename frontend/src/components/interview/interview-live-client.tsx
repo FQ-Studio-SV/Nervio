@@ -3,10 +3,23 @@
 import { ConversationProvider } from "@elevenlabs/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AuthBackground } from "@/components/layout/auth-background";
 import { InterviewLiveShell } from "@/components/interview/interview-live-shell";
 import { interviewService } from "@/lib/interview";
 import { getSessionSetup } from "@/lib/interview/session-storage";
 import { useInterviewConversation } from "@/lib/interview/use-interview-conversation";
+import type { InterviewSetupInput } from "@/lib/interview/types";
+
+function InterviewLiveLoading() {
+  return (
+    <>
+      <AuthBackground />
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center">
+        <p className="text-muted-foreground">Preparando entrevista...</p>
+      </div>
+    </>
+  );
+}
 
 function InterviewLiveInner({ sessionId }: { sessionId: string }) {
   const router = useRouter();
@@ -67,15 +80,21 @@ interface InterviewLiveClientProps {
 
 export function InterviewLiveClient({ sessionId }: InterviewLiveClientProps) {
   const router = useRouter();
-  const setup = getSessionSetup(sessionId);
+  const [setup, setSetup] = useState<InterviewSetupInput | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!setup) {
+    const stored = getSessionSetup(sessionId);
+    setSetup(stored);
+    setIsReady(true);
+    if (!stored) {
       router.replace("/interview/setup");
     }
-  }, [setup, router]);
+  }, [sessionId, router]);
 
-  if (!setup) return null;
+  if (!isReady || !setup) {
+    return <InterviewLiveLoading />;
+  }
 
   return (
     <ConversationProvider>
