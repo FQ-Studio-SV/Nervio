@@ -76,8 +76,8 @@ export function InterviewLiveShell({
           </span>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8">
-          <InterviewOrb state={orbState} />
+        <main className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-6 sm:gap-6">
+          <InterviewOrb state={orbState} className="size-64 sm:size-80" />
           <InterviewBubble
             text={
               currentQuestion ||
@@ -87,10 +87,12 @@ export function InterviewLiveShell({
             }
             phase={phase}
           />
-          <InterviewTimeline messages={messages} />
         </main>
 
-        <footer className="border-t border-white/5 bg-background/40 px-6 py-6 backdrop-blur-md">
+        <footer className="border-t border-white/5 bg-background/30 px-6 py-4 backdrop-blur-md">
+          <div className="mx-auto mb-3 flex max-w-2xl justify-center">
+            <InterviewTimeline messages={messages} />
+          </div>
           <div className="mx-auto flex justify-center">
             <InterviewControls
               phase={phase}
@@ -100,6 +102,7 @@ export function InterviewLiveShell({
               error={error}
               onToggleMute={onToggleMute}
               onEndInterview={onEndInterview}
+              className="max-w-2xl"
             />
           </div>
           <p className="mt-3 text-center text-xs text-muted-foreground/60">

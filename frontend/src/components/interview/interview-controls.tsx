@@ -32,7 +32,7 @@ export function InterviewControls({
   return (
     <div
       className={cn(
-        "glass-panel flex w-full max-w-lg flex-col gap-4 rounded-2xl p-4",
+        "glass-panel flex w-full max-w-lg flex-col gap-3 rounded-2xl bg-background/45 p-4",
         className,
       )}
     >
@@ -80,7 +80,7 @@ export function InterviewControls({
         {isBusy ? <Spinner className="size-5" /> : null}
       </div>
 
-      <p className="text-center text-xs text-muted-foreground">
+      <p className="text-center text-xs text-muted-foreground/80">
         Conversación por voz con el agente ElevenLabs — habla cuando el orbe esté en modo escucha
       </p>
     </div>

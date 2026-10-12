@@ -18,14 +18,14 @@ export function InterviewBubble({ text, phase, className }: InterviewBubbleProps
   return (
     <div
       className={cn(
-        "glass-panel glow-cyan w-full max-w-lg rounded-3xl px-6 py-5",
+        "glass-panel glow-cyan w-full max-w-2xl rounded-[2rem] border-primary/10 bg-background/55 px-6 py-5 shadow-2xl shadow-primary/10 backdrop-blur-xl",
         className,
       )}
     >
       <p className="mb-2 text-xs font-medium tracking-wide text-primary uppercase">
         {phaseLabels[phase] ?? "Entrevista"}
       </p>
-      <p className="text-base leading-relaxed text-foreground sm:text-lg">
+      <p className="text-base leading-relaxed text-foreground/95 sm:text-lg">
         {text || "Preparando la sesión..."}
       </p>
     </div>
