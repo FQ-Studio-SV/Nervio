@@ -33,6 +33,10 @@ function InterviewLiveInner({ sessionId }: { sessionId: string }) {
     isBusy,
     error,
     connectionLabel,
+    agentEnded,
+    agentReportReady,
+    endedByPoorConnection,
+    conversationId,
     toggleMute,
     endInterview,
   } = useInterviewConversation(sessionId);
@@ -47,18 +51,54 @@ function InterviewLiveInner({ sessionId }: { sessionId: string }) {
     return () => clearInterval(interval);
   }, []);
 
-  const handleEndInterview = useCallback(async () => {
+  const handleEndInterview = useCallback(async (skipEvaluation = false) => {
     if (isEnding) return;
     setIsEnding(true);
     try {
       endInterview();
-      const report = await interviewService.end(sessionId);
-      router.push(`/interview/${report.sessionId}/report`);
+      const result = await interviewService.end(
+        sessionId,
+        skipEvaluation ? null : conversationId,
+        {
+          reason: skipEvaluation ? "poor_connection" : "manual",
+          skipEvaluation,
+        },
+      );
+      if (skipEvaluation) {
+        router.push(`/interview/${sessionId}/ended?reason=poor-connection`);
+        return;
+      }
+
+      router.push(
+        result.reportReady
+          ? `/interview/${sessionId}/report`
+          : `/interview/${sessionId}/ended`,
+      );
     } catch (error) {
       console.error("No se pudo finalizar la entrevista:", error);
+      if (skipEvaluation) {
+        router.push(`/interview/${sessionId}/ended?reason=poor-connection`);
+        return;
+      }
+
       setIsEnding(false);
     }
-  }, [endInterview, isEnding, router, sessionId]);
+  }, [conversationId, endInterview, isEnding, router, sessionId]);
+
+  useEffect(() => {
+    if (!endedByPoorConnection) return;
+    void handleEndInterview(true);
+  }, [endedByPoorConnection, handleEndInterview]);
+
+  useEffect(() => {
+    if (agentEnded) {
+      router.push(
+        agentReportReady
+          ? `/interview/${sessionId}/report`
+          : `/interview/${sessionId}/ended`,
+      );
+    }
+  }, [agentEnded, agentReportReady, router, sessionId]);
 
   if (!setup) return null;
 

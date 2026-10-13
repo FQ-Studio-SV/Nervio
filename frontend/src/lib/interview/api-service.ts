@@ -7,6 +7,7 @@ import {
   saveSession,
 } from "./session-storage";
 import type {
+  CloseInterviewResponse,
   InterviewReport,
   InterviewSetupInput,
   InterviewTurn,
@@ -66,13 +67,18 @@ export const apiInterviewService: InterviewService = {
     });
   },
 
-  async end(sessionId: string): Promise<InterviewReport> {
+  async end(
+    sessionId: string,
+    conversationId?: string | null,
+    options = {},
+  ): Promise<CloseInterviewResponse> {
     const session = getSession(sessionId);
     if (session) {
       saveSession({ ...session, status: "ended" });
     }
-    return apiJson<InterviewReport>(`/api/interview/${sessionId}/end`, {
+    return apiJson<CloseInterviewResponse>(`/api/interview/${sessionId}/end`, {
       method: "POST",
+      body: JSON.stringify({ conversationId, ...options }),
     });
   },
 
