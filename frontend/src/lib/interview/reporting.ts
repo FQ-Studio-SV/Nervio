@@ -28,6 +28,17 @@ export interface LocalEvaluation {
   recommendation: string;
 }
 
+interface ElevenLabsResult {
+  value?: unknown;
+  rationale?: string;
+}
+
+export interface ElevenLabsConversationAnalysis {
+  analysis?: {
+    data_collection_results?: Record<string, ElevenLabsResult>;
+  };
+}
+
 function toNumber(value: unknown, fallback = 0) {
   if (typeof value === "number") return value;
   if (typeof value === "string") return Number(value);
@@ -36,6 +47,26 @@ function toNumber(value: unknown, fallback = 0) {
     return decimal.toNumber();
   }
   return fallback;
+}
+
+function resultNumber(
+  results: Record<string, ElevenLabsResult>,
+  key: string,
+  fallback = 0,
+) {
+  return Math.round(toNumber(results[key]?.value, fallback));
+}
+
+function resultStringList(
+  results: Record<string, ElevenLabsResult>,
+  key: string,
+) {
+  const value = results[key]?.value;
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+  if (typeof value === "string" && value.trim()) return [value.trim()];
+  return [];
 }
 
 export function parseStoredList(value: string | null | undefined) {
@@ -92,6 +123,42 @@ export function buildLocalEvaluation(responseTexts: string[]): LocalEvaluation {
       scoreGlobal >= 75
         ? "Buen desempeño general. Sigue practicando respuestas con ejemplos específicos."
         : "Conviene repetir la simulación enfocándote en respuestas más completas y estructuradas.",
+  };
+}
+
+export function buildElevenLabsEvaluation(
+  conversation: ElevenLabsConversationAnalysis,
+): LocalEvaluation | null {
+  const results = conversation.analysis?.data_collection_results;
+  if (!results) return null;
+
+  const scoreClarity = resultNumber(results, "scoreClarity");
+  const scoreKnowledge = resultNumber(results, "scoreKnowledge");
+  const scoreConfidence = resultNumber(results, "scoreConfidence");
+  const scoreStructure = resultNumber(results, "scoreStructure", scoreClarity);
+  const scoreGlobal =
+    resultNumber(results, "scoreGlobal") ||
+    Math.round(
+      (scoreClarity + scoreKnowledge + scoreConfidence + scoreStructure) / 4,
+    );
+  const strengths = resultStringList(results, "fortalezas");
+  const weaknesses = resultStringList(results, "areas_de_mejora");
+
+  if (!scoreGlobal) return null;
+
+  return {
+    scoreGlobal,
+    scoreClarity,
+    scoreKnowledge,
+    scoreConfidence,
+    scoreStructure,
+    strengths,
+    weaknesses,
+    recommendation:
+      typeof results.recommendation?.value === "string"
+        ? results.recommendation.value
+        : results.scoreGlobal?.rationale ??
+          "Reporte generado desde el análisis post-llamada de ElevenLabs.",
   };
 }
 
