@@ -5,6 +5,7 @@ export type ExperienceLevel = "junior" | "mid" | "senior";
 export type InterviewLanguage = "es" | "en" | "pt";
 
 export type InterviewPhase =
+  | "awaiting_mic"
   | "connecting"
   | "speaking"
   | "listening"

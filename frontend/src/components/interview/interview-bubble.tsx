@@ -8,6 +8,7 @@ interface InterviewBubbleProps {
 }
 
 const phaseLabels: Partial<Record<InterviewPhase, string>> = {
+  awaiting_mic: "Micrófono",
   connecting: "Conectando...",
   speaking: "Entrevistador",
   listening: "Tu turno",

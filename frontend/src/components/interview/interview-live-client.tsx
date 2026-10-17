@@ -21,25 +21,32 @@ function InterviewLiveLoading() {
   );
 }
 
-function InterviewLiveInner({ sessionId }: { sessionId: string }) {
+function InterviewLiveInner({
+  sessionId,
+  setup: sessionSetup,
+}: {
+  sessionId: string;
+  setup: InterviewSetupInput;
+}) {
   const router = useRouter();
   const {
-    setup,
     phase,
     orbState,
     currentQuestion,
     messages,
     isMuted,
     isBusy,
+    needsMicActivation,
     error,
     connectionLabel,
     agentEnded,
     agentReportReady,
     endedByPoorConnection,
     conversationId,
+    activateMicrophone,
     toggleMute,
     endInterview,
-  } = useInterviewConversation(sessionId);
+  } = useInterviewConversation(sessionId, sessionSetup);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isEnding, setIsEnding] = useState(false);
@@ -100,13 +107,11 @@ function InterviewLiveInner({ sessionId }: { sessionId: string }) {
     }
   }, [agentEnded, agentReportReady, router, sessionId]);
 
-  if (!setup) return null;
-
   return (
     <InterviewLiveShell
       sessionId={sessionId}
-      interviewType={setup.interviewType}
-      role={setup.role}
+      interviewType={sessionSetup.interviewType}
+      role={sessionSetup.role}
       elapsedSeconds={elapsedSeconds}
       phase={phase}
       orbState={orbState}
@@ -114,8 +119,10 @@ function InterviewLiveInner({ sessionId }: { sessionId: string }) {
       messages={messages}
       isMuted={isMuted}
       isBusy={isBusy || isEnding}
+      needsMicActivation={needsMicActivation}
       connectionLabel={connectionLabel}
       error={error}
+      onActivateMicrophone={() => void activateMicrophone()}
       onToggleMute={toggleMute}
       onEndInterview={() => void handleEndInterview()}
     />
@@ -166,7 +173,7 @@ export function InterviewLiveClient({ sessionId }: InterviewLiveClientProps) {
 
   return (
     <ConversationProvider>
-      <InterviewLiveInner sessionId={sessionId} />
+      <InterviewLiveInner sessionId={sessionId} setup={setup} />
     </ConversationProvider>
   );
 }

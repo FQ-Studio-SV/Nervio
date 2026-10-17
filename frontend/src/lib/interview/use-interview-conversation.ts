@@ -63,7 +63,7 @@ function buildContext(setup: InterviewSetupInput): string {
 }
 
 function phaseToOrb(phase: InterviewPhase, isSpeaking: boolean): OrbState {
-  if (phase === "connecting") return "idle";
+  if (phase === "awaiting_mic" || phase === "connecting") return "idle";
   if (phase === "ended") return "idle";
   if (phase === "thinking") return "thinking";
   if (isSpeaking || phase === "speaking") return "speaking";
@@ -152,20 +152,24 @@ function extractMessagePayload(raw: unknown): {
   return { role, text: text.trim() };
 }
 
-export function useInterviewConversation(sessionId: string) {
-  const setup = getSessionSetup(sessionId);
+export function useInterviewConversation(
+  sessionId: string,
+  initialSetup?: InterviewSetupInput | null,
+) {
+  const setup = getSessionSetup(sessionId) ?? initialSetup ?? null;
+
   const [messages, setMessages] = useState<InterviewMessage[]>(
     () => getSession(sessionId)?.messages ?? [],
   );
   const [currentQuestion, setCurrentQuestion] = useState("");
-  const [phase, setPhase] = useState<InterviewPhase>("connecting");
+  const [phase, setPhase] = useState<InterviewPhase>("awaiting_mic");
   const [error, setError] = useState<string | null>(null);
   const [endEventReceived, setEndEventReceived] = useState(false);
   const [agentEnded, setAgentEnded] = useState(false);
   const [agentReportReady, setAgentReportReady] = useState(false);
   const [endedByPoorConnection, setEndedByPoorConnection] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const startedRef = useRef(false);
+  const connectInFlightRef = useRef(false);
   const contextSentRef = useRef(false);
   const endPersistedRef = useRef(false);
   const expectedDisconnectRef = useRef(false);
@@ -333,45 +337,47 @@ export function useInterviewConversation(sessionId: string) {
     sendContextualUpdate(buildContext(setup));
   }, [status, setup, sendContextualUpdate]);
 
-  useEffect(() => {
-    if (!setup || startedRef.current) return;
-    startedRef.current = true;
+  const activateMicrophone = useCallback(async () => {
+    if (!setup || connectInFlightRef.current) return;
 
-    const connect = async () => {
-      try {
-        setPhase("connecting");
-        if (hasPoorConnection()) {
-          closeForPoorConnection();
-          return;
-        }
+    connectInFlightRef.current = true;
+    setError(null);
+    setPhase("connecting");
 
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-
-        const response = await fetch("/api/elevenlabs/token");
-        if (!response.ok) {
-          const body = (await response.json().catch(() => ({}))) as {
-            error?: string;
-          };
-          throw new Error(body.error ?? "No se pudo conectar con ElevenLabs");
-        }
-
-        const { token } = (await response.json()) as { token: string };
-        startSession({ conversationToken: token });
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Error al iniciar la conversación",
-        );
-        setPhase("ended");
+    try {
+      if (hasPoorConnection()) {
+        closeForPoorConnection();
+        return;
       }
-    };
 
-    void connect();
+      await navigator.mediaDevices.getUserMedia({ audio: true });
 
+      const response = await fetch("/api/elevenlabs/token");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(body.error ?? "No se pudo conectar con ElevenLabs");
+      }
+
+      const { token } = (await response.json()) as { token: string };
+      startSession({ conversationToken: token });
+    } catch (err) {
+      const errMessage =
+        err instanceof Error ? err.message : "Error al iniciar la conversación";
+      setError(errMessage);
+      setPhase("awaiting_mic");
+    } finally {
+      connectInFlightRef.current = false;
+    }
+  }, [setup, sessionId, startSession, closeForPoorConnection]);
+
+  useEffect(() => {
     return () => {
       expectedDisconnectRef.current = true;
       endSession();
     };
-  }, [setup, startSession, endSession, closeForPoorConnection]);
+  }, [endSession]);
 
   const toggleMute = useCallback(() => {
     setMuted(!isMuted);
@@ -387,14 +393,19 @@ export function useInterviewConversation(sessionId: string) {
     }
   }, [endSession, sessionId]);
 
+  const needsMicActivation =
+    phase === "awaiting_mic" || (Boolean(error) && phase !== "ended");
+
   const connectionLabel =
     status === "connected"
       ? "En vivo"
-      : status === "connecting"
+      : phase === "connecting" || status === "connecting"
         ? "Conectando..."
-        : error
-          ? "Error"
-          : "Desconectado";
+        : needsMicActivation
+          ? "Micrófono inactivo"
+          : error
+            ? "Error"
+            : "Desconectado";
 
   return {
     setup,
@@ -403,13 +414,15 @@ export function useInterviewConversation(sessionId: string) {
     currentQuestion,
     messages,
     isMuted,
-    isBusy: status === "connecting",
+    isBusy: phase === "connecting" || status === "connecting",
+    needsMicActivation,
     error,
     connectionLabel,
     agentEnded,
     agentReportReady,
     endedByPoorConnection,
     conversationId,
+    activateMicrophone,
     toggleMute,
     endInterview,
   };

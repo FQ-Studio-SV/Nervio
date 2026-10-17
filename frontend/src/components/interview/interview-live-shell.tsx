@@ -22,8 +22,10 @@ interface InterviewLiveShellProps {
   messages: import("@/lib/interview/types").InterviewMessage[];
   isMuted: boolean;
   isBusy: boolean;
+  needsMicActivation: boolean;
   connectionLabel: string;
   error?: string | null;
+  onActivateMicrophone: () => void;
   onToggleMute: () => void;
   onEndInterview: () => void;
 }
@@ -45,8 +47,10 @@ export function InterviewLiveShell({
   messages,
   isMuted,
   isBusy,
+  needsMicActivation,
   connectionLabel,
   error,
+  onActivateMicrophone,
   onToggleMute,
   onEndInterview,
 }: InterviewLiveShellProps) {
@@ -81,17 +85,19 @@ export function InterviewLiveShell({
           <InterviewBubble
             text={
               currentQuestion ||
-              (phase === "connecting"
-                ? "Conectando con el entrevistador..."
-                : phase === "ended"
-                  ? (error ?? "Entrevista finalizada")
-                : "La conversación está en curso")
+              (phase === "awaiting_mic"
+                ? "Pulsa «Activar micrófono» abajo para permitir el audio y comenzar la entrevista."
+                : phase === "connecting"
+                  ? "Conectando con el entrevistador..."
+                  : phase === "ended"
+                    ? (error ?? "Entrevista finalizada")
+                    : "La conversación está en curso")
             }
             phase={phase}
           />
         </main>
 
-        <footer className="border-t border-white/5 bg-background/30 px-6 py-4 backdrop-blur-md">
+        <footer className="sticky bottom-0 z-20 border-t border-white/5 bg-background/80 px-6 py-4 backdrop-blur-md">
           <div className="mx-auto mb-3 flex max-w-2xl justify-center">
             <InterviewTimeline messages={messages} />
           </div>
@@ -100,8 +106,10 @@ export function InterviewLiveShell({
               phase={phase}
               isMuted={isMuted}
               isBusy={isBusy}
+              needsMicActivation={needsMicActivation}
               connectionLabel={connectionLabel}
               error={error}
+              onActivateMicrophone={onActivateMicrophone}
               onToggleMute={onToggleMute}
               onEndInterview={onEndInterview}
               className="max-w-2xl"
