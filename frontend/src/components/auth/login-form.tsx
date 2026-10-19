@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { AuthCard } from "@/components/auth/auth-card";
 import { Button } from "@/components/ui/button";
@@ -16,16 +15,19 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
 import { type LoginFormValues, loginSchema } from "@/lib/validations/auth";
+import { createZodResolver } from "@/lib/validations/create-zod-resolver";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: createZodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -36,7 +38,7 @@ export function LoginForm() {
     const { error } = await authClient.signIn.email({
       email: values.email,
       password: values.password,
-      callbackURL: "/",
+      callbackURL: callbackUrl,
     });
 
     if (error) {
@@ -46,7 +48,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/");
+    router.push(callbackUrl);
     router.refresh();
   };
 
