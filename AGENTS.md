@@ -29,4 +29,6 @@ The agent must follow these rules:
 
 In summary: the agent must determine whether a task is frontend or backend and restrict its search and execution to the corresponding folder within the monorepo.
 
-ALSO READ THE 
+ALSO READ THE project-flow.md and project-overview.md at the root.
+
+Use caveman if you find the skill in front or backend
