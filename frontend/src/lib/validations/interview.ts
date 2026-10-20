@@ -12,6 +12,7 @@ export const interviewSetupSchema = z.object({
   extraContext: z
     .string()
     .min(10, "Describe el perfil con al menos 10 caracteres"),
+  stack: z.string().optional(),
 });
 
 export type InterviewSetupFormValues = z.infer<typeof interviewSetupSchema>;

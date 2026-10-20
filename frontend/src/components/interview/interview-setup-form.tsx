@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   EXPERIENCE_LEVEL_OPTIONS,
   INTERVIEW_TYPE_OPTIONS,
-  mockInterviewService,
+  interviewService,
 } from "@/lib/interview";
 import type { InterviewType } from "@/lib/interview/types";
 import {
@@ -66,16 +66,20 @@ export function InterviewSetupForm() {
       level: undefined,
       interviewType: undefined,
       extraContext: "",
+      stack: "",
     },
   });
 
   const onSubmit = async (values: InterviewSetupFormValues) => {
     try {
-      const { sessionId } = await mockInterviewService.start(values);
+      const { sessionId } = await interviewService.start(values);
       router.push(`/interview/${sessionId}`);
-    } catch {
+    } catch (error) {
       setError("root", {
-        message: "No se pudo iniciar la sesión. Intenta de nuevo.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "No se pudo iniciar la sesión. Intenta de nuevo.",
       });
     }
   };
@@ -169,6 +173,15 @@ export function InterviewSetupForm() {
               )}
             />
             <FieldError errors={[errors.interviewType]} />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="stack">Stack tecnológico (opcional)</FieldLabel>
+            <Input
+              id="stack"
+              placeholder="Ej. React, TypeScript, Node.js"
+              {...register("stack")}
+            />
           </Field>
 
           <Field data-invalid={!!errors.extraContext}>

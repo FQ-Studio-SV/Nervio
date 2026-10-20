@@ -16,7 +16,27 @@ export interface InterviewSetupInput {
   candidateName: string;
   level: ExperienceLevel;
   interviewType: InterviewType;
+  stack?: string;
   extraContext: string;
+}
+
+export interface InterviewQuestion {
+  session_id: string;
+  question_text: string;
+  order_index: number;
+  is_followup: boolean;
+  id?: string;
+}
+
+export interface StartInterviewResponse {
+  sessionId: string;
+  questions: InterviewQuestion[];
+  question: {
+    text: string;
+    order_index: number;
+    is_followup: boolean;
+  };
+  audioUrl: string | null;
 }
 
 export interface InterviewMessage {
@@ -51,7 +71,9 @@ export interface MockSessionState {
   id: string;
   setup: InterviewSetupInput;
   messages: InterviewMessage[];
+  questions: InterviewQuestion[];
   questionIndex: number;
   startedAt: number;
   status: "active" | "ended";
+  audioUrl?: string | null;
 }

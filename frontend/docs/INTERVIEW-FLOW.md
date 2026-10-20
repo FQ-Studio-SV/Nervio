@@ -39,42 +39,44 @@ interface InterviewService {
 
 ### Implementación actual
 
-- **Mock:** `src/lib/interview/mock-service.ts`
-- **Estado:** `sessionStorage` bajo clave `nervio:interview-sessions`
-- **Export:** `mockInterviewService` desde `src/lib/interview/index.ts`
+- **API (default):** `src/lib/interview/api-service.ts` → `POST /api/interview/start`
+- **Mock (fallback):** `NEXT_PUBLIC_USE_MOCK_INTERVIEW=true` → `mockInterviewService`
+- **Factory:** `getInterviewService()` en `src/lib/interview/service-factory.ts`
+- **Estado cliente:** `sessionStorage` vía `session-storage.ts`
 
-### Integración backend (TODO)
+### Integración N8N Flujo 1 (implementado)
 
-Crear `src/lib/interview/api-service.ts`:
+| Paso | Archivo |
+|------|---------|
+| Adaptador payload | `src/lib/interview/n8n.ts` → `toN8nGenerateInterviewPayload()` |
+| Webhook N8N | `callN8nGenerateInterview()` |
+| Sync Prisma | `src/lib/interview/sync-session.ts` |
+| ElevenLabs TTS | `src/lib/interview/elevenlabs.ts` |
+| Route handler | `src/app/api/interview/start/route.ts` |
 
-| Método mock | Endpoint backend | Notas |
-|-------------|------------------|-------|
-| `start()` | `POST /interview/start` | Dispara N8N `/generate-interview` |
-| `sendMessage()` | `POST /interview/message` | Transcripción + respuesta + audio |
-| `end()` | `POST /interview/end` | Dispara N8N `/final-report` |
-| `getReport()` | `GET /interview/:id/report` o respuesta de `end()` | — |
+Variables de entorno: ver `frontend/.env.example`
 
-Para cambiar a API real, reemplazar import en componentes:
+| Método | Endpoint | Estado |
+|--------|----------|--------|
+| `start()` | `POST /api/interview/start` | Implementado (N8N + ElevenLabs) |
+| `sendMessage()` | `POST /interview/message` | Pendiente (mock local) |
+| `end()` | `POST /interview/end` | Pendiente (mock local) |
+| `getReport()` | N8N `/final-report` | Pendiente |
 
-```typescript
-// Antes
-import { mockInterviewService } from "@/lib/interview";
+Ver también: `frontend/docs/N8N-TABLE-ALIGNMENT.md`
 
-// Después
-import { apiInterviewService as interviewService } from "@/lib/interview/api-service";
-```
+## Mapeo formulario → N8N → Prisma
 
-Ideal: factory en `src/lib/interview/index.ts` según `NEXT_PUBLIC_USE_MOCK_INTERVIEW`.
-
-## Mapeo formulario → Prisma `InterviewSession`
-
-| Campo UI | Tipo TS | Campo Prisma | Notas |
-|----------|---------|--------------|-------|
-| Puesto | `role` | `role` | Directo |
-| Nombre | `candidateName` | — | Solo mock/UI por ahora |
-| Experiencia | `level` | `level` | `junior` \| `mid` \| `senior` |
-| Tipo entrevista | `interviewType` | `interviewType` | `hr` \| `tecnico` \| `no_tecnico` \| `agresivo` |
-| Perfil/contexto | `extraContext` | `extraContext` | Textarea |
+| Campo UI | TS | N8N body | Prisma |
+|----------|-----|----------|--------|
+| Puesto | `role` | `role` | `role` |
+| Nombre | `candidateName` | en `extra_context` | — |
+| Experiencia | `level` | `level` | `level` |
+| Tipo entrevista | `interviewType` | `interview_type` | `interviewType` |
+| Stack | `stack` | `stack` | `stack` |
+| Perfil/contexto | `extraContext` | `extra_context` | `extraContext` |
+| — | — | `stress_mode` | `stressMode` (= `agresivo`) |
+| — | — | `user_id` | `userId` (auth) |
 
 Validación: `src/lib/validations/interview.ts`
 
