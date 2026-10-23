@@ -1,6 +1,9 @@
 const ELEVENLABS_MODEL = "eleven_multilingual_v2";
 
-export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
+export async function synthesizeSpeech(
+  text: string,
+  languageCode = "es",
+): Promise<ArrayBuffer> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   const voiceId = process.env.ELEVENLABS_VOICE_ID;
 
@@ -20,6 +23,7 @@ export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
       body: JSON.stringify({
         text,
         model_id: ELEVENLABS_MODEL,
+        language_code: languageCode,
       }),
     },
   );
