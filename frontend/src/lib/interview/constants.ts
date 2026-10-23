@@ -1,4 +1,4 @@
-import type { InterviewType } from "./types";
+import type { InterviewLanguage, InterviewType } from "./types";
 
 export const INTERVIEW_TYPE_OPTIONS: {
   value: InterviewType;
@@ -31,6 +31,15 @@ export const EXPERIENCE_LEVEL_OPTIONS = [
   { value: "junior" as const, label: "Junior (0-2 años)" },
   { value: "mid" as const, label: "Mid (2-5 años)" },
   { value: "senior" as const, label: "Senior (5+ años)" },
+];
+
+export const INTERVIEW_LANGUAGE_OPTIONS: {
+  value: InterviewLanguage;
+  label: string;
+}[] = [
+  { value: "es", label: "Español" },
+  { value: "en", label: "English" },
+  { value: "pt", label: "Português" },
 ];
 
 const MOCK_QUESTIONS: Record<InterviewType, string[]> = {

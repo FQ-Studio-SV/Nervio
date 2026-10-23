@@ -55,7 +55,10 @@ export async function POST(request: Request) {
 
     if (process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_VOICE_ID) {
       try {
-        const audioBuffer = await synthesizeSpeech(firstQuestion.question_text);
+        const audioBuffer = await synthesizeSpeech(
+          firstQuestion.question_text,
+          setup.language,
+        );
         audioUrl = arrayBufferToDataUrlNode(audioBuffer);
       } catch (ttsError) {
         console.error("ElevenLabs TTS error:", ttsError);

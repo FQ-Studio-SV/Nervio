@@ -22,6 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import {
   EXPERIENCE_LEVEL_OPTIONS,
+  INTERVIEW_LANGUAGE_OPTIONS,
   INTERVIEW_TYPE_OPTIONS,
   interviewService,
 } from "@/lib/interview";
@@ -50,7 +51,13 @@ const TYPE_STYLES: Record<InterviewType, string> = {
     "border-destructive/40 bg-destructive/10 hover:bg-destructive/15 data-[selected=true]:border-destructive data-[selected=true]:bg-destructive/20",
 };
 
-export function InterviewSetupForm() {
+interface InterviewSetupFormProps {
+  defaultCandidateName?: string;
+}
+
+export function InterviewSetupForm({
+  defaultCandidateName = "",
+}: InterviewSetupFormProps) {
   const router = useRouter();
   const {
     register,
@@ -62,8 +69,9 @@ export function InterviewSetupForm() {
     resolver: createZodResolver(interviewSetupSchema),
     defaultValues: {
       role: "",
-      candidateName: "",
+      candidateName: defaultCandidateName,
       level: undefined,
+      language: "es",
       interviewType: undefined,
       extraContext: "",
       stack: "",
@@ -115,30 +123,57 @@ export function InterviewSetupForm() {
             </Field>
           </div>
 
-          <Field data-invalid={!!errors.level}>
-            <FieldLabel htmlFor="level">Experiencia</FieldLabel>
-            <Controller
-              name="level"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  id="level"
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  aria-invalid={!!errors.level}
-                  placeholder="Selecciona tu nivel"
-                >
-                  {EXPERIENCE_LEVEL_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            />
-            <FieldError errors={[errors.level]} />
-          </Field>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Field data-invalid={!!errors.level}>
+              <FieldLabel htmlFor="level">Experiencia</FieldLabel>
+              <Controller
+                name="level"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    id="level"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    aria-invalid={!!errors.level}
+                    placeholder="Selecciona tu nivel"
+                    className={cn(!field.value && "text-muted-foreground")}
+                  >
+                    {EXPERIENCE_LEVEL_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              />
+              <FieldError errors={[errors.level]} />
+            </Field>
+
+            <Field data-invalid={!!errors.language}>
+              <FieldLabel htmlFor="language">Idioma de la entrevista</FieldLabel>
+              <Controller
+                name="language"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    id="language"
+                    value={field.value ?? "es"}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    aria-invalid={!!errors.language}
+                  >
+                    {INTERVIEW_LANGUAGE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              />
+              <FieldError errors={[errors.language]} />
+            </Field>
+          </div>
 
           <Field data-invalid={!!errors.interviewType}>
             <FieldLabel>Tipo de entrevista</FieldLabel>
