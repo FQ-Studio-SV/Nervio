@@ -5,7 +5,7 @@
 > Toda especificación (`spec.md`), plan técnico (`plan.md`) y tarea (`tasks.md`) DEBE ser consistente con esta constitución.
 > Ante un conflicto entre una decisión de implementación y este documento, **la constitución prevalece**.
 
-- **Versión:** 1.0.0
+- **Versión:** 1.2.0
 - **Estado:** Ratificada
 - **Ámbito:** `backend/` (monorepo Nervio)
 - **Última actualización:** 2026-07-04
@@ -39,15 +39,15 @@ Lo que **NO es tiempo real** (generación inicial de preguntas, evaluación prof
 El backend se organiza en módulos con una sola responsabilidad clara:
 
 - **Interview Engine** — orquesta el flujo de la entrevista y decide el siguiente turno.
-- **AI Engine** — abstrae la interacción con el LLM (OpenAI).
-- **Voice Engine** — abstrae STT (Whisper) y TTS (ElevenLabs).
+- **AI Engine** — abstrae la interacción con el LLM (OpenAI GPT) que genera las réplicas coherentes del entrevistador.
+- **Voice Engine** — abstrae STT y TTS, ambos provistos por **ElevenLabs** (STT con el modelo Scribe, TTS con voces por perfil).
 - **Session Manager** — administra el estado y la persistencia parcial de la sesión.
 
 Los módulos se comunican por interfaces explícitas. Ningún módulo accede a los detalles internos de otro.
 
 ### IV. Proveedores externos detrás de interfaces (adapters)
 
-- OpenAI, Whisper, ElevenLabs, Supabase y N8N se consumen **siempre** a través de una interfaz/adapter propio, nunca directamente desde la lógica de negocio.
+- OpenAI, ElevenLabs (STT y TTS), Supabase y N8N se consumen **siempre** a través de una interfaz/adapter propio, nunca directamente desde la lógica de negocio.
 - Esto permite mockear en tests, cambiar de proveedor y aislar fallos externos.
 - Ninguna clave/API key vive en el código: solo en variables de entorno.
 
@@ -70,7 +70,7 @@ Los módulos se comunican por interfaces explícitas. Ningún módulo accede a l
 
 ### VIII. Simplicidad orientada al MVP
 
-- Se prioriza lo que hace demostrable el MVP: entrevista en vivo, 3 tipos de entrevistador, modo estrés, evaluación final, feedback hablado y agendamiento.
+- Se prioriza lo que hace demostrable el MVP: entrevista en vivo, **cuatro tipos de entrevistador** (`hr`, `tecnico`, `no_tecnico`, `agresivo`/estrés), modo estrés, evaluación final, feedback hablado y agendamiento.
 - Queda **fuera de alcance**: video, análisis facial, IA ultra personalizada por CV, multilenguaje avanzado.
 - No se añade infraestructura ni abstracción que no sirva a una feature del MVP ("YAGNI").
 
@@ -80,10 +80,10 @@ Los módulos se comunican por interfaces explícitas. Ningún módulo accede a l
 
 - **Runtime:** Node.js (LTS).
 - **Framework:** NestJS (preferido por su modularidad) o Node + Express como fallback.
-- **Tiempo real:** WebSockets para el turno conversacional.
+- **Tiempo real:** WebSockets con transporte **`ws`** (no Socket.IO), en dos planos: canal navegador↔backend (NestJS `WsAdapter`) y conexiones cliente backend→ElevenLabs (STT/TTS en streaming). Socket.IO queda descartado por su overhead para audio binario.
 - **Persistencia:** Supabase (Postgres).
-- **IA:** OpenAI (GPT) para conversación, Whisper para STT.
-- **Voz:** ElevenLabs para TTS.
+- **IA:** OpenAI (GPT) para la conversación (réplicas coherentes del entrevistador).
+- **Voz:** ElevenLabs para **STT (modelo Scribe) y TTS**.
 - **Automatización:** N8N vía webhooks.
 - **Config:** todo por variables de entorno; nada de secretos en el repo.
 
@@ -107,3 +107,9 @@ Ninguna fase avanza sin que la anterior esté aprobada.
 
 - Cualquier cambio a esta constitución requiere: (1) justificación escrita, (2) incremento de versión (semver) y (3) revisión de las specs afectadas.
 - **MAJOR:** cambio o eliminación de un principio. **MINOR:** nuevo principio o sección. **PATCH:** aclaraciones o correcciones de redacción.
+
+### Historial de enmiendas
+
+- **1.1.0 (2026-07-04):** El STT pasa de Whisper a **ElevenLabs (modelo Scribe)**, unificando STT y TTS en un solo proveedor de voz. *Justificación:* menor superficie de integración y latencia consistente en el turno de voz; OpenAI GPT se mantiene como motor de conversación. *Specs afectadas:* `specs/001-interview-core/{spec.md, plan.md}`.
+- **1.1.1 (2026-07-04):** Se aclara el transporte de tiempo real: WebSockets sobre **`ws`** (NestJS `WsAdapter`, no Socket.IO) y el backend como **cliente WS** hacia los endpoints de streaming de ElevenLabs (STT `scribe_v2_realtime` y TTS `stream-input`). *Justificación:* Socket.IO no es apto para streaming de audio binario de baja latencia; se mantiene NestJS. *Specs afectadas:* `specs/001-interview-core/plan.md`.
+- **1.2.0 (2026-07-04):** Alineación *contract-first* con los contratos ya materializados por frontend/N8N/Prisma: (1) **cuatro** tipos de entrevista en español (`hr`, `tecnico`, `no_tecnico`, `agresivo`), (2) nombres reales del modelo de datos (`interview_sessions`, `webhook_logs`, señales de estrés en `responses`, columnas concretas de `evaluations`), (3) idioma de la entrevista: **español**. *Justificación:* la fuente de verdad de los contratos ya existe en el repo (`frontend/prisma/schema.prisma`, `recibe.json`, `respuesta.json`, `project-flow.md`); el SDD del backend debe reflejarla. *Specs afectadas:* `specs/001-interview-core/{spec.md, plan.md}`.

@@ -32,7 +32,7 @@ El *Interview Core* es el conjunto de capacidades del backend que permiten lleva
 | **Entrevistador IA** | Persona virtual con un perfil (HR, Técnico, Estrés) que conduce la entrevista. |
 | **Frontend** | Captura audio, reproduce audio, muestra estado. Consumidor de la API. |
 | **N8N** | Genera el set inicial de preguntas y procesa el reporte final (asíncrono). |
-| **Proveedores externos** | OpenAI (LLM), Whisper (STT), ElevenLabs (TTS), Supabase (persistencia). |
+| **Proveedores externos** | OpenAI (LLM), ElevenLabs (STT con Scribe + TTS), Supabase (persistencia). |
 
 ## 4. Alcance
 
@@ -60,7 +60,7 @@ Cada requisito es verificable y usa lenguaje normativo (DEBE / DEBERÍA / PUEDE)
 
 ### 5.1 Configuración e inicio de entrevista
 
-- **RF-01** El sistema DEBE aceptar una configuración de entrevista con: tipo (`hr` | `technical` | `stress`), rol (p. ej. Frontend/Backend), nivel (`junior` | `mid` | `senior`), stack tecnológico, notas libres del usuario y un flag de modo estrés.
+- **RF-01** El sistema DEBE aceptar una configuración de entrevista con: tipo (`hr` | `tecnico` | `no_tecnico` | `agresivo`), rol (p. ej. "Desarrollador Senior"), nivel (`junior` | `mid` | `senior`), stack tecnológico (cadena separada por comas), contexto extra libre (`extra_context`, que incluye el nombre del candidato) y un flag de modo estrés. Convención vigente: el tipo `agresivo` implica `stress_mode = true`.
 - **RF-02** Al iniciar, el sistema DEBE solicitar a N8N la generación del set de preguntas base y follow-ups para esa configuración.
 - **RF-03** El sistema DEBE crear una sesión persistida y devolver un `sessionId` único.
 - **RF-04** Si N8N no responde a tiempo, el sistema DEBE degradarse (usar un set de preguntas de respaldo) y marcar la sesión como degradada, sin fallar el inicio.
@@ -68,15 +68,15 @@ Cada requisito es verificable y usa lenguaje normativo (DEBE / DEBERÍA / PUEDE)
 ### 5.2 Ciclo conversacional en tiempo real
 
 - **RF-05** El sistema DEBE emitir la pregunta actual del entrevistador como **texto y audio** (TTS).
-- **RF-06** El sistema DEBE aceptar la respuesta del usuario como **audio** y transcribirla a texto (STT).
-- **RF-07** El sistema DEBE generar la réplica del entrevistador con IA usando el **contexto acumulado** de la sesión (preguntas y respuestas previas).
+- **RF-06** El sistema DEBE aceptar la respuesta del usuario como **audio** y transcribirla a texto (STT mediante ElevenLabs / modelo Scribe).
+- **RF-07** El sistema DEBE generar la réplica del entrevistador con IA (**OpenAI GPT**) usando el **contexto acumulado** de la sesión (preguntas y respuestas previas) para producir respuestas coherentes.
 - **RF-08** El sistema DEBE decidir dinámicamente el siguiente turno: profundizar (follow-up), avanzar a la siguiente pregunta o cerrar.
 - **RF-09** El sistema DEBE mantener el turno conversacional por un canal de baja latencia (WebSocket).
 - **RF-10** El sistema DEBE persistir de forma incremental cada intercambio (texto + referencia a audio) para la reproducción posterior.
 
 ### 5.3 Perfiles de entrevistador
 
-- **RF-11** El sistema DEBE ajustar el comportamiento del entrevistador según el perfil: **HR** (amable, conversacional), **Técnico** (directo, enfocado en conocimiento), **Estrés** (presiona, interrumpe, incomoda).
+- **RF-11** El sistema DEBE ajustar el comportamiento del entrevistador según el perfil: **HR** (`hr`, amable, conversacional), **Técnico** (`tecnico`, directo, enfocado en conocimiento), **No técnico** (`no_tecnico`, habilidades blandas y experiencia general) y **Agresivo/Estrés** (`agresivo`, presiona, interrumpe, incomoda). Las réplicas del entrevistador DEBEN estar en **español**.
 - **RF-12** El perfil DEBE reflejarse tanto en el contenido (prompt del LLM) como en la voz (parámetros de TTS).
 
 ### 5.4 Modo estrés
@@ -88,8 +88,9 @@ Cada requisito es verificable y usa lenguaje normativo (DEBE / DEBERÍA / PUEDE)
 ### 5.5 Cierre y reporte
 
 - **RF-16** El sistema DEBE poder finalizar la entrevista a petición del usuario o cuando se agoten las preguntas.
-- **RF-17** Al finalizar, el sistema DEBE disparar el flujo de reporte final en N8N con la referencia de la sesión.
+- **RF-17** Al finalizar, el sistema DEBE disparar el flujo de reporte final en N8N (`/final-report`) con la referencia de la sesión.
 - **RF-18** El sistema DEBE marcar la sesión como `completed` y dejar de aceptar turnos.
+- **RF-18b** El reporte final que N8N escribe en `evaluations` y que el sistema expone DEBE tener la forma `InterviewReport`: `scoreGlobal`, `scoreClarity`, `scoreKnowledge`, `scoreConfidence`, `scoreStructure`, `strengths[]`, `weaknesses[]`, `recommendation`, más eco de `interviewType`, `role` y `candidateName` (ver `respuesta.json`).
 
 ### 5.6 Agendamiento
 
@@ -117,6 +118,11 @@ Cada requisito es verificable y usa lenguaje normativo (DEBE / DEBERÍA / PUEDE)
 | `POST /schedule` | Agenda una sesión futura y notifica a N8N. |
 | `WS  /interview/:sessionId` | Canal de tiempo real para el turno conversacional. |
 
+**Flujos N8N asociados** (fuente: `project-flow.md`, `frontend/docs/N8N-TABLE-ALIGNMENT.md`):
+
+- `/generate-interview` — al iniciar: genera preguntas base + follow-ups y crea la sesión (entrada = `recibe.json`, salida = `{ sessionId, questions[] }`).
+- `/final-report` — al finalizar: evaluación profunda que escribe `evaluations` (salida = `InterviewReport`, ver `respuesta.json`).
+
 ## 8. Máquina de estados de la sesión
 
 ```
@@ -134,15 +140,17 @@ created ──▶ running ──▶ ending ──▶ completed
 
 ## 9. Modelo de datos (conceptual)
 
-Entidades mínimas (el esquema físico se define en el plan):
+Entidades mínimas (nombres físicos alineados con `frontend/prisma/schema.prisma`; detalle en el plan):
 
-- **session** — configuración, estado, timestamps, flag degradada.
-- **question** — preguntas y follow-ups asociados a la sesión.
-- **response** — respuesta del usuario (texto transcrito + ref. de audio).
-- **turn / exchange** — par pregunta-réplica para reproducción, con orden.
-- **recording** — referencias a audios (IA y usuario).
-- **evaluation** — (la escribe N8N; el backend solo la lee).
-- **schedule** — sesiones agendadas.
+- **interview_sessions** — configuración (`interview_type`, `role`, `level`, `stack`, `extra_context`, `stress_mode`), `status`, timestamps.
+- **questions** — preguntas y follow-ups (`question_text`, `order_index`, `is_followup`, `parent_question_id`).
+- **responses** — respuesta del usuario (`response_text` transcrito + `audio_url`) y **señales de estrés persistidas** (`long_pause_detected`, `filler_words_detected`, `confidence_flag`).
+- **recordings** — referencias a audios (`type` `ai`/`user`, `reference_id`, `audio_url`, `duration_seconds`) para reproducción de sesión.
+- **evaluations** — la escribe N8N; el backend solo la lee (`score_global`, `score_clarity`, `score_knowledge`, `score_confidence`, `score_structure`, `strengths`, `weaknesses`, `recommendation`).
+- **schedules** — sesiones agendadas (`scheduled_at`, flags de recordatorio email/WhatsApp).
+- **webhook_logs** — auditoría de llamadas a N8N (`flow_name`, `endpoint`, payloads, `status`) — apoya la observabilidad (P-V).
+
+> Las tablas de autenticación de Better Auth (`user`, `session`, `account`, `verification`) quedan **fuera del alcance** del backend en el MVP (endpoints públicos, P-VII). Nota: la tabla de login `session` es distinta de `interview_sessions`.
 
 ## 10. Criterios de aceptación
 
@@ -167,8 +175,12 @@ Entidades mínimas (el esquema físico se define en el plan):
 - **[NECESITA ACLARACIÓN]** ¿Umbrales concretos para "silencio largo" y "respuesta débil" en el modo estrés?
 - **[NECESITA ACLARACIÓN]** ¿Objetivo numérico de latencia máxima aceptable por turno?
 - **[NECESITA ACLARACIÓN]** ¿Set de preguntas de respaldo (RF-04) fijo o generado localmente por el AI Engine?
+- **[NECESITA ACLARACIÓN — divergencia con lo implementado]** `project-flow.md` asigna `POST /interview/start` al **backend** (que llama a N8N), pero el frontend ya implementó `POST /api/interview/start` en Next.js llamando a N8N y ElevenLabs directamente y sincronizando Prisma (`frontend/src/app/api/interview/start/route.ts`). Hay que decidir el dueño canónico de `start`: (a) el backend NestJS lo posee y el frontend lo consume, o (b) el frontend conserva `start` (generación inicial) y el backend se limita al turno en vivo (`/interview/message`, WS) y al cierre (`/interview/end`). Esto contradice el principio "el frontend no habla con N8N" del propio `project-flow.md`.
+- **[NECESITA ACLARACIÓN]** Vocabulario de `status`: el modelo Prisma usa `pending` por defecto; la máquina de estados de la spec usa `created → running → ending → completed`. Definir el mapeo (¿`pending` = `created`?).
+- **[NECESITA ACLARACIÓN]** El STT del proyecto: `project-overview.md`/`project-flow.md` aún mencionan **Whisper**, pero la constitución del backend (v1.1.0) ya decidió **ElevenLabs Scribe**. Confirmar la fuente de verdad (la constitución prevalece salvo enmienda de esos documentos raíz).
 
 ## 13. Dependencias
 
 - Spec 002 — Integraciones N8N (webhooks de generación y reporte). *(pendiente)*
-- Constitución v1.0.0.
+- Constitución v1.2.0.
+- Contratos ya materializados (fuente de verdad transversal): `frontend/prisma/schema.prisma` (modelo de datos), `recibe.json` (payload N8N generate), `respuesta.json` (`InterviewReport`), `frontend/docs/{INTERVIEW-FLOW.md, N8N-TABLE-ALIGNMENT.md}`, `project-flow.md`.

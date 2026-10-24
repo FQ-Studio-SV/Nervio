@@ -51,13 +51,15 @@ backend/
 Módulos por dominio (detalle en el plan de la spec 001):
 
 - **Interview Engine** — orquesta el flujo y la máquina de estados de la entrevista.
-- **AI Engine** — adapter de OpenAI (réplicas dinámicas, prompts por perfil).
-- **Voice Engine** — STT (Whisper) + TTS (ElevenLabs).
+- **AI Engine** — adapter de OpenAI GPT (réplicas coherentes y dinámicas, prompts por perfil).
+- **Voice Engine** — STT + TTS con **ElevenLabs** en streaming por WebSocket (Scribe v2 Realtime para transcripción, `stream-input` con voces por perfil para síntesis).
 - **Session Manager** — estado y persistencia incremental (Supabase).
 - **Stress** — detección de señales y escalado del modo estrés.
 - **Scheduling / Integrations (N8N)** — agendamiento y webhooks asíncronos.
 
 Filosofía: **tiempo real → backend**, **procesos pesados → N8N**, **UI → frontend**.
+
+**Tiempo real:** WebSockets sobre `ws` (adaptador `WsAdapter` de NestJS, no Socket.IO) para el canal navegador↔backend, y el backend como cliente `ws` hacia los endpoints de streaming de ElevenLabs.
 
 ---
 
