@@ -38,23 +38,27 @@ export function persistStartSession(
   setup: InterviewSetupInput,
   data: {
     sessionId: string;
-    questions: MockSessionState["questions"];
-    firstQuestionText: string;
+    questions?: MockSessionState["questions"];
+    firstQuestionText?: string;
     audioUrl?: string | null;
   },
 ) {
+  const messages: MockSessionState["messages"] = data.firstQuestionText
+    ? [
+        {
+          id: crypto.randomUUID(),
+          role: "interviewer",
+          text: data.firstQuestionText,
+          timestamp: Date.now(),
+        },
+      ]
+    : [];
+
   const session: MockSessionState = {
     id: data.sessionId,
     setup,
-    messages: [
-      {
-        id: crypto.randomUUID(),
-        role: "interviewer",
-        text: data.firstQuestionText,
-        timestamp: Date.now(),
-      },
-    ],
-    questions: data.questions,
+    messages,
+    questions: data.questions ?? [],
     questionIndex: 0,
     startedAt: Date.now(),
     status: "active",
