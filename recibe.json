@@ -1,9 +1,26 @@
 {
+  // Payload que recibe el webhook de N8N `/generate-interview` (Flujo 1).
+  // Fuente/generador: toN8nGenerateInterviewPayload() en frontend/src/lib/interview/n8n.ts
+  // Nota: este archivo es una REFERENCIA del contrato (JSONC con comentarios), no lo consume el código.
+
+  // user_id: UUID del usuario autenticado (Better Auth). En el MVP con endpoints públicos puede ir un placeholder.
   "user_id": "b3f1c2d4-5e6a-7b8c-9d0e-1f2a3b4c5d6e",
+
+  // interview_type: tipo/perfil del entrevistador. Valores permitidos: "hr" | "tecnico" | "no_tecnico" | "agresivo".
   "interview_type": "tecnico",
+
+  // role: puesto o rol objetivo de la entrevista (texto libre). Ej.: "Frontend Developer", "Desarrollador Senior".
   "role": "Desarrollador Senior",
+
+  // level: nivel de experiencia esperado. Valores permitidos: "junior" | "mid" | "senior".
   "level": "senior",
+
+  // stack: tecnologías relevantes como CADENA separada por comas (no array). Puede ir vacío/null si no aplica.
   "stack": "React, Node.js",
+
+  // extra_context: contexto libre para afinar las preguntas. Incluye el nombre del candidato ("Candidato: <nombre>") y detalles del perfil/puesto.
   "extra_context": "Candidato: Juan Pérez\n\nPuesto: Desarrollador Senior. Requisitos: React, Node.js, Arquitectura de software. Soft skills: Trabajo en equipo, Comunicación asertiva. Experiencia del candidato: 5 años como desarrollador Fullstack (React, Express, SQL).",
+
+  // stress_mode: activa el modo estrés (bool). Convención: true cuando interview_type === "agresivo".
   "stress_mode": false
 }
