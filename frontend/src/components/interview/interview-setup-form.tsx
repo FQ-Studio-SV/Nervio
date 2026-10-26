@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -59,11 +60,18 @@ export function InterviewSetupForm({
   defaultCandidateName = "",
 }: InterviewSetupFormProps) {
   const router = useRouter();
+  const [actionMode, setActionMode] = useState<"now" | "schedule">("now");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [scheduleConfirmation, setScheduleConfirmation] = useState<string | null>(
+    null,
+  );
   const {
     register,
     handleSubmit,
     control,
     setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<InterviewSetupFormValues>({
     resolver: createZodResolver(interviewSetupSchema),
@@ -79,7 +87,31 @@ export function InterviewSetupForm({
   });
 
   const onSubmit = async (values: InterviewSetupFormValues) => {
+    setScheduleError(null);
+    setScheduleConfirmation(null);
+    clearErrors("root");
+
     try {
+      if (actionMode === "schedule") {
+        const date = new Date(scheduledAt);
+        if (!scheduledAt || Number.isNaN(date.getTime()) || date.getTime() <= Date.now()) {
+          setScheduleError("Selecciona una fecha futura para agendar la cita.");
+          return;
+        }
+
+        const schedule = await interviewService.schedule({
+          ...values,
+          scheduledAt,
+        });
+        setScheduleConfirmation(
+          `Cita agendada para ${new Intl.DateTimeFormat("es", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }).format(new Date(schedule.scheduledAt))}.`,
+        );
+        return;
+      }
+
       const { sessionId } = await interviewService.start(values);
       router.push(`/interview/${sessionId}`);
     } catch (error) {
@@ -92,6 +124,14 @@ export function InterviewSetupForm({
     }
   };
 
+  const submitLabel = isSubmitting
+    ? actionMode === "schedule"
+      ? "Guardando cita..."
+      : "Conectando con entrevistador..."
+    : actionMode === "schedule"
+      ? "Agendar cita"
+      : "Iniciar simulación";
+
   return (
     <InterviewSetupCard
       title="Configura tu entrevista"
@@ -99,6 +139,36 @@ export function InterviewSetupForm({
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>
+          <Field>
+            <FieldLabel>¿Qué quieres hacer?</FieldLabel>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                data-selected={actionMode === "now"}
+                disabled={isSubmitting}
+                onClick={() => setActionMode("now")}
+                className="rounded-xl border border-primary/30 bg-primary/10 p-4 text-left text-sm transition-all hover:bg-primary/15 disabled:opacity-50 data-[selected=true]:border-primary data-[selected=true]:bg-primary/20"
+              >
+                <span className="font-medium">Iniciar ahora</span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Conecta con el entrevistador al enviar el formulario.
+                </span>
+              </button>
+              <button
+                type="button"
+                data-selected={actionMode === "schedule"}
+                disabled={isSubmitting}
+                onClick={() => setActionMode("schedule")}
+                className="rounded-xl border border-secondary/30 bg-secondary/10 p-4 text-left text-sm transition-all hover:bg-secondary/15 disabled:opacity-50 data-[selected=true]:border-secondary data-[selected=true]:bg-secondary/20"
+              >
+                <span className="font-medium">Agendar cita</span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Guarda fecha y hora para practicar después.
+                </span>
+              </button>
+            </div>
+          </Field>
+
           <div className="grid gap-6 sm:grid-cols-2">
             <Field data-invalid={!!errors.role}>
               <FieldLabel htmlFor="role">Puesto al que aplicas</FieldLabel>
@@ -106,6 +176,7 @@ export function InterviewSetupForm({
                 id="role"
                 placeholder="Ej. Frontend Developer"
                 aria-invalid={!!errors.role}
+                disabled={isSubmitting}
                 {...register("role")}
               />
               <FieldError errors={[errors.role]} />
@@ -117,6 +188,7 @@ export function InterviewSetupForm({
                 id="candidateName"
                 placeholder="Tu nombre completo"
                 aria-invalid={!!errors.candidateName}
+                disabled={isSubmitting}
                 {...register("candidateName")}
               />
               <FieldError errors={[errors.candidateName]} />
@@ -138,6 +210,7 @@ export function InterviewSetupForm({
                     aria-invalid={!!errors.level}
                     placeholder="Selecciona tu nivel"
                     className={cn(!field.value && "text-muted-foreground")}
+                    disabled={isSubmitting}
                   >
                     {EXPERIENCE_LEVEL_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -162,6 +235,7 @@ export function InterviewSetupForm({
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                     aria-invalid={!!errors.language}
+                    disabled={isSubmitting}
                   >
                     {INTERVIEW_LANGUAGE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -190,9 +264,10 @@ export function InterviewSetupForm({
                         key={opt.value}
                         type="button"
                         data-selected={selected}
+                        disabled={isSubmitting}
                         onClick={() => field.onChange(opt.value)}
                         className={cn(
-                          "flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all",
+                          "flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all disabled:opacity-50",
                           TYPE_STYLES[opt.value],
                         )}
                       >
@@ -215,6 +290,7 @@ export function InterviewSetupForm({
             <Input
               id="stack"
               placeholder="Ej. React, TypeScript, Node.js"
+              disabled={isSubmitting}
               {...register("stack")}
             />
           </Field>
@@ -228,16 +304,46 @@ export function InterviewSetupForm({
               placeholder="Describe el puesto, stack, expectativas o lo que quieras que considere el entrevistador..."
               rows={4}
               aria-invalid={!!errors.extraContext}
+              disabled={isSubmitting}
               {...register("extraContext")}
             />
             <FieldError errors={[errors.extraContext]} />
           </Field>
 
+          {actionMode === "schedule" ? (
+            <Field data-invalid={!!scheduleError}>
+              <FieldLabel htmlFor="scheduledAt">Fecha y hora de la cita</FieldLabel>
+              <Input
+                id="scheduledAt"
+                type="datetime-local"
+                value={scheduledAt}
+                disabled={isSubmitting}
+                aria-invalid={!!scheduleError}
+                onChange={(event) => setScheduledAt(event.target.value)}
+              />
+              {scheduleError ? <FieldError>{scheduleError}</FieldError> : null}
+            </Field>
+          ) : null}
+
           {errors.root && <FieldError>{errors.root.message}</FieldError>}
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {scheduleConfirmation ? (
+            <p
+              className="rounded-xl border border-primary/20 bg-primary/10 p-3 text-center text-sm text-primary"
+              aria-live="polite"
+            >
+              {scheduleConfirmation}
+            </p>
+          ) : null}
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
+          >
             {isSubmitting ? <Spinner data-icon="inline-start" /> : null}
-            Iniciar simulación
+            {submitLabel}
           </Button>
         </FieldGroup>
       </form>

@@ -38,6 +38,7 @@ function InterviewLiveInner({ sessionId }: { sessionId: string }) {
   } = useInterviewConversation(sessionId);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isEnding, setIsEnding] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -47,10 +48,17 @@ function InterviewLiveInner({ sessionId }: { sessionId: string }) {
   }, []);
 
   const handleEndInterview = useCallback(async () => {
-    endInterview();
-    const report = await interviewService.end(sessionId);
-    router.push(`/interview/${report.sessionId}/report`);
-  }, [endInterview, router, sessionId]);
+    if (isEnding) return;
+    setIsEnding(true);
+    try {
+      endInterview();
+      const report = await interviewService.end(sessionId);
+      router.push(`/interview/${report.sessionId}/report`);
+    } catch (error) {
+      console.error("No se pudo finalizar la entrevista:", error);
+      setIsEnding(false);
+    }
+  }, [endInterview, isEnding, router, sessionId]);
 
   if (!setup) return null;
 
@@ -65,7 +73,7 @@ function InterviewLiveInner({ sessionId }: { sessionId: string }) {
       currentQuestion={currentQuestion}
       messages={messages}
       isMuted={isMuted}
-      isBusy={isBusy}
+      isBusy={isBusy || isEnding}
       connectionLabel={connectionLabel}
       error={error}
       onToggleMute={toggleMute}
@@ -84,12 +92,32 @@ export function InterviewLiveClient({ sessionId }: InterviewLiveClientProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const stored = getSessionSetup(sessionId);
-    setSetup(stored);
-    setIsReady(true);
-    if (!stored) {
-      router.replace("/interview/setup");
-    }
+    let cancelled = false;
+
+    const loadSession = async () => {
+      const stored = getSessionSetup(sessionId);
+      if (stored) {
+        setSetup(stored);
+        setIsReady(true);
+        return;
+      }
+
+      try {
+        const persisted = await interviewService.getSession(sessionId);
+        if (cancelled) return;
+        setSetup(persisted.setup);
+      } catch {
+        if (!cancelled) router.replace("/interview/setup");
+      } finally {
+        if (!cancelled) setIsReady(true);
+      }
+    };
+
+    void loadSession();
+
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId, router]);
 
   if (!isReady || !setup) {

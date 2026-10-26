@@ -70,6 +70,36 @@ export interface InterviewReport {
   candidateName: string;
 }
 
+export interface PersistedInterviewSession {
+  id: string;
+  setup: InterviewSetupInput;
+  messages: InterviewMessage[];
+  questions: InterviewQuestion[];
+  status: "active" | "ended" | "scheduled";
+  startedAt: number | null;
+  scheduledAt?: string | null;
+}
+
+export interface ScheduleInterviewInput extends InterviewSetupInput {
+  scheduledAt: string;
+}
+
+export interface ScheduleInterviewResponse {
+  sessionId: string;
+  scheduleId: string;
+  scheduledAt: string;
+}
+
+export interface InterviewReportSummary {
+  sessionId: string;
+  role: string;
+  interviewType: InterviewType;
+  scoreGlobal: number | null;
+  status: string;
+  endedAt: string | null;
+  createdAt: string;
+}
+
 export interface MockSessionState {
   id: string;
   setup: InterviewSetupInput;

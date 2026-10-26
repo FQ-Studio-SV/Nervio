@@ -7,11 +7,38 @@ import {
 } from "@/lib/interview/elevenlabs";
 import {
   callN8nGenerateInterview,
+  type N8nGenerateInterviewResponse,
   toN8nGenerateInterviewPayload,
 } from "@/lib/interview/n8n";
+import { getMockQuestions } from "@/lib/interview/constants";
 import { syncN8nSessionToPrisma } from "@/lib/interview/sync-session";
 import type { InterviewSetupInput, StartInterviewResponse } from "@/lib/interview/types";
 import { interviewSetupSchema } from "@/lib/validations/interview";
+
+async function generateInterview(
+  setup: InterviewSetupInput,
+  userId: string,
+): Promise<N8nGenerateInterviewResponse> {
+  if (process.env.N8N_WEBHOOK_GENERATE_INTERVIEW_URL) {
+    try {
+      return await callN8nGenerateInterview(
+        toN8nGenerateInterviewPayload(setup, userId),
+      );
+    } catch (error) {
+      console.warn("N8N generate-interview fallback:", error);
+    }
+  }
+
+  const sessionId = crypto.randomUUID();
+  const questions = getMockQuestions(setup.interviewType).map((text, index) => ({
+    session_id: sessionId,
+    question_text: text,
+    order_index: index + 1,
+    is_followup: false,
+  }));
+
+  return { sessionId, questions };
+}
 
 export async function POST(request: Request) {
   try {
@@ -34,8 +61,7 @@ export async function POST(request: Request) {
     }
 
     const setup: InterviewSetupInput = parsed.data;
-    const n8nPayload = toN8nGenerateInterviewPayload(setup, session.user.id);
-    const n8nResponse = await callN8nGenerateInterview(n8nPayload);
+    const n8nResponse = await generateInterview(setup, session.user.id);
 
     await syncN8nSessionToPrisma(n8nResponse, setup, session.user.id);
 

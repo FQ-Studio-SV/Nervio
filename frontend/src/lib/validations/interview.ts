@@ -18,4 +18,15 @@ export const interviewSetupSchema = z.object({
   stack: z.string().optional(),
 });
 
+export const scheduleInterviewSchema = interviewSetupSchema.extend({
+  scheduledAt: z
+    .string()
+    .min(1, "Selecciona fecha y hora")
+    .refine((value) => {
+      const date = new Date(value);
+      return !Number.isNaN(date.getTime()) && date.getTime() > Date.now();
+    }, "Selecciona una fecha futura"),
+});
+
 export type InterviewSetupFormValues = z.infer<typeof interviewSetupSchema>;
+export type ScheduleInterviewFormValues = z.infer<typeof scheduleInterviewSchema>;
