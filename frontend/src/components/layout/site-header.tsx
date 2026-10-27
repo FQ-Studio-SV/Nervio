@@ -9,6 +9,7 @@ import { authClient } from "@/lib/auth-client";
 const navLinks = [
   { href: "/", label: "Inicio" },
   { href: "/interview/setup", label: "Practicar", requiresAuth: true },
+  { href: "/interview/schedules", label: "Agenda", requiresAuth: true },
   { href: "/interview/reports", label: "Reportes", requiresAuth: true },
   { href: "#", label: "Metodología" },
   { href: "#", label: "Precios" },

@@ -83,6 +83,8 @@ export function InterviewLiveShell({
               currentQuestion ||
               (phase === "connecting"
                 ? "Conectando con el entrevistador..."
+                : phase === "ended"
+                  ? (error ?? "Entrevista finalizada")
                 : "La conversación está en curso")
             }
             phase={phase}

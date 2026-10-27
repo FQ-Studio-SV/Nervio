@@ -1,4 +1,6 @@
 import type {
+  CloseInterviewResponse,
+  EndInterviewOptions,
   InterviewReport,
   InterviewSetupInput,
   InterviewTurn,
@@ -14,7 +16,11 @@ export interface InterviewService {
     sessionId: string,
     payload: { role?: "interviewer" | "candidate"; text?: string; audioBlob?: Blob },
   ): Promise<InterviewTurn>;
-  end(sessionId: string): Promise<InterviewReport>;
+  end(
+    sessionId: string,
+    conversationId?: string | null,
+    options?: EndInterviewOptions,
+  ): Promise<CloseInterviewResponse>;
   getReport(sessionId: string): Promise<InterviewReport>;
   getOpeningQuestion(sessionId: string): Promise<string>;
   getSession(sessionId: string): Promise<PersistedInterviewSession>;

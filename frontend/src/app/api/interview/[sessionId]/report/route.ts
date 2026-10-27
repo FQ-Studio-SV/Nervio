@@ -1,6 +1,11 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import {
+  fetchElevenLabsEvaluation,
+  getRememberedElevenLabsConversationId,
+  saveEvaluation,
+} from "@/lib/interview/elevenlabs-analysis";
 import { toInterviewReport } from "@/lib/interview/reporting";
 import { prisma } from "@/lib/prisma";
 
@@ -19,7 +24,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
     }
 
     const { sessionId } = await params;
-    const interview = await prisma.interviewSession.findFirst({
+    let interview = await prisma.interviewSession.findFirst({
       where: { id: sessionId, userId: session.user.id },
       include: {
         evaluations: true,
@@ -32,6 +37,25 @@ export async function GET(_request: Request, { params }: RouteContext) {
     }
 
     if (!interview.evaluations) {
+      const conversationId =
+        await getRememberedElevenLabsConversationId(sessionId);
+      const evaluation = conversationId
+        ? await fetchElevenLabsEvaluation(conversationId, 5)
+        : null;
+
+      if (evaluation) {
+        await saveEvaluation(sessionId, evaluation);
+        interview = await prisma.interviewSession.findFirst({
+          where: { id: sessionId, userId: session.user.id },
+          include: {
+            evaluations: true,
+            user: true,
+          },
+        });
+      }
+    }
+
+    if (!interview?.evaluations) {
       return NextResponse.json(
         { error: "Reporte no generado para esta sesión" },
         { status: 404 },
