@@ -1,0 +1,20 @@
+{
+  "sessionId": "b3f1c2d4-5e6a-7b8c-9d0e-1f2a3b4c5d6e",
+  "scoreGlobal": 82,
+  "scoreClarity": 85,
+  "scoreKnowledge": 88,
+  "scoreConfidence": 78,
+  "scoreStructure": 80,
+  "strengths": [
+    "Base sólida en conceptos técnicos",
+    "Capacidad de razonar sobre trade-offs"
+  ],
+  "weaknesses": [
+    "Algunas respuestas podrían ser más estructuradas",
+    "Profundiza en casos de escalabilidad real"
+  ],
+  "recommendation": "Nivel adecuado con margen de mejora. Practica system design y casos reales.",
+  "interviewType": "tecnico",
+  "role": "Desarrollador Senior",
+  "candidateName": "Juan Pérez"
+}
