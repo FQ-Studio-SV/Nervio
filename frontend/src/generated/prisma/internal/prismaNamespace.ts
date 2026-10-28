@@ -1406,6 +1406,9 @@ export const SchedulesScalarFieldEnum = {
   sessionId: 'sessionId',
   userId: 'userId',
   scheduledAt: 'scheduledAt',
+  candidateName: 'candidateName',
+  reminderOffsetMinutes: 'reminderOffsetMinutes',
+  reminderAt: 'reminderAt',
   reminderEmailSent: 'reminderEmailSent',
   reminderWhatsappSent: 'reminderWhatsappSent',
   createdAt: 'createdAt'

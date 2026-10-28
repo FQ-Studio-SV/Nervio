@@ -172,6 +172,9 @@ model schedules {
   sessionId              String?           @map("session_id") @db.Uuid
   userId                 String?           @map("user_id")
   scheduledAt            DateTime          @map("scheduled_at") @db.Timestamptz(6)
+  candidateName          String            @default("") @map("candidate_name")
+  reminderOffsetMinutes  Int               @default(60) @map("reminder_offset_minutes")
+  reminderAt             DateTime          @map("reminder_at") @db.Timestamptz(6)
   reminderEmailSent      Boolean           @default(false) @map("reminder_email_sent")
   reminderWhatsappSent   Boolean           @default(false) @map("reminder_whatsapp_sent")
   createdAt              DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -179,6 +182,7 @@ model schedules {
   user                   User?             @relation(fields: [userId], references: [id], onUpdate: NoAction)
 
   @@index([reminderEmailSent, reminderWhatsappSent], map: "idx_schedules_reminders")
+  @@index([reminderEmailSent, reminderAt], map: "idx_schedules_reminder_due")
   @@index([scheduledAt], map: "idx_schedules_scheduled_at")
 }
 

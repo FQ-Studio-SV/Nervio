@@ -20,8 +20,18 @@ export type schedulesModel = runtime.Types.Result.DefaultSelection<Prisma.$sched
 
 export type AggregateSchedules = {
   _count: SchedulesCountAggregateOutputType | null
+  _avg: SchedulesAvgAggregateOutputType | null
+  _sum: SchedulesSumAggregateOutputType | null
   _min: SchedulesMinAggregateOutputType | null
   _max: SchedulesMaxAggregateOutputType | null
+}
+
+export type SchedulesAvgAggregateOutputType = {
+  reminderOffsetMinutes: number | null
+}
+
+export type SchedulesSumAggregateOutputType = {
+  reminderOffsetMinutes: number | null
 }
 
 export type SchedulesMinAggregateOutputType = {
@@ -29,6 +39,9 @@ export type SchedulesMinAggregateOutputType = {
   sessionId: string | null
   userId: string | null
   scheduledAt: Date | null
+  candidateName: string | null
+  reminderOffsetMinutes: number | null
+  reminderAt: Date | null
   reminderEmailSent: boolean | null
   reminderWhatsappSent: boolean | null
   createdAt: Date | null
@@ -39,6 +52,9 @@ export type SchedulesMaxAggregateOutputType = {
   sessionId: string | null
   userId: string | null
   scheduledAt: Date | null
+  candidateName: string | null
+  reminderOffsetMinutes: number | null
+  reminderAt: Date | null
   reminderEmailSent: boolean | null
   reminderWhatsappSent: boolean | null
   createdAt: Date | null
@@ -49,6 +65,9 @@ export type SchedulesCountAggregateOutputType = {
   sessionId: number
   userId: number
   scheduledAt: number
+  candidateName: number
+  reminderOffsetMinutes: number
+  reminderAt: number
   reminderEmailSent: number
   reminderWhatsappSent: number
   createdAt: number
@@ -56,11 +75,22 @@ export type SchedulesCountAggregateOutputType = {
 }
 
 
+export type SchedulesAvgAggregateInputType = {
+  reminderOffsetMinutes?: true
+}
+
+export type SchedulesSumAggregateInputType = {
+  reminderOffsetMinutes?: true
+}
+
 export type SchedulesMinAggregateInputType = {
   id?: true
   sessionId?: true
   userId?: true
   scheduledAt?: true
+  candidateName?: true
+  reminderOffsetMinutes?: true
+  reminderAt?: true
   reminderEmailSent?: true
   reminderWhatsappSent?: true
   createdAt?: true
@@ -71,6 +101,9 @@ export type SchedulesMaxAggregateInputType = {
   sessionId?: true
   userId?: true
   scheduledAt?: true
+  candidateName?: true
+  reminderOffsetMinutes?: true
+  reminderAt?: true
   reminderEmailSent?: true
   reminderWhatsappSent?: true
   createdAt?: true
@@ -81,6 +114,9 @@ export type SchedulesCountAggregateInputType = {
   sessionId?: true
   userId?: true
   scheduledAt?: true
+  candidateName?: true
+  reminderOffsetMinutes?: true
+  reminderAt?: true
   reminderEmailSent?: true
   reminderWhatsappSent?: true
   createdAt?: true
@@ -125,6 +161,18 @@ export type SchedulesAggregateArgs<ExtArgs extends runtime.Types.Extensions.Inte
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: SchedulesAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: SchedulesSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: SchedulesMinAggregateInputType
@@ -155,6 +203,8 @@ export type schedulesGroupByArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   _count?: SchedulesCountAggregateInputType | true
+  _avg?: SchedulesAvgAggregateInputType
+  _sum?: SchedulesSumAggregateInputType
   _min?: SchedulesMinAggregateInputType
   _max?: SchedulesMaxAggregateInputType
 }
@@ -164,10 +214,15 @@ export type SchedulesGroupByOutputType = {
   sessionId: string | null
   userId: string | null
   scheduledAt: Date
+  candidateName: string
+  reminderOffsetMinutes: number
+  reminderAt: Date
   reminderEmailSent: boolean
   reminderWhatsappSent: boolean
   createdAt: Date
   _count: SchedulesCountAggregateOutputType | null
+  _avg: SchedulesAvgAggregateOutputType | null
+  _sum: SchedulesSumAggregateOutputType | null
   _min: SchedulesMinAggregateOutputType | null
   _max: SchedulesMaxAggregateOutputType | null
 }
@@ -195,6 +250,9 @@ export type schedulesWhereInput = {
   sessionId?: Prisma.UuidNullableFilter<"schedules"> | string | null
   userId?: Prisma.StringNullableFilter<"schedules"> | string | null
   scheduledAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
+  candidateName?: Prisma.StringFilter<"schedules"> | string
+  reminderOffsetMinutes?: Prisma.IntFilter<"schedules"> | number
+  reminderAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
   reminderEmailSent?: Prisma.BoolFilter<"schedules"> | boolean
   reminderWhatsappSent?: Prisma.BoolFilter<"schedules"> | boolean
   createdAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
@@ -207,6 +265,9 @@ export type schedulesOrderByWithRelationInput = {
   sessionId?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
+  candidateName?: Prisma.SortOrder
+  reminderOffsetMinutes?: Prisma.SortOrder
+  reminderAt?: Prisma.SortOrder
   reminderEmailSent?: Prisma.SortOrder
   reminderWhatsappSent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -222,6 +283,9 @@ export type schedulesWhereUniqueInput = Prisma.AtLeast<{
   sessionId?: Prisma.UuidNullableFilter<"schedules"> | string | null
   userId?: Prisma.StringNullableFilter<"schedules"> | string | null
   scheduledAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
+  candidateName?: Prisma.StringFilter<"schedules"> | string
+  reminderOffsetMinutes?: Prisma.IntFilter<"schedules"> | number
+  reminderAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
   reminderEmailSent?: Prisma.BoolFilter<"schedules"> | boolean
   reminderWhatsappSent?: Prisma.BoolFilter<"schedules"> | boolean
   createdAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
@@ -234,12 +298,17 @@ export type schedulesOrderByWithAggregationInput = {
   sessionId?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
+  candidateName?: Prisma.SortOrder
+  reminderOffsetMinutes?: Prisma.SortOrder
+  reminderAt?: Prisma.SortOrder
   reminderEmailSent?: Prisma.SortOrder
   reminderWhatsappSent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.schedulesCountOrderByAggregateInput
+  _avg?: Prisma.schedulesAvgOrderByAggregateInput
   _max?: Prisma.schedulesMaxOrderByAggregateInput
   _min?: Prisma.schedulesMinOrderByAggregateInput
+  _sum?: Prisma.schedulesSumOrderByAggregateInput
 }
 
 export type schedulesScalarWhereWithAggregatesInput = {
@@ -250,6 +319,9 @@ export type schedulesScalarWhereWithAggregatesInput = {
   sessionId?: Prisma.UuidNullableWithAggregatesFilter<"schedules"> | string | null
   userId?: Prisma.StringNullableWithAggregatesFilter<"schedules"> | string | null
   scheduledAt?: Prisma.DateTimeWithAggregatesFilter<"schedules"> | Date | string
+  candidateName?: Prisma.StringWithAggregatesFilter<"schedules"> | string
+  reminderOffsetMinutes?: Prisma.IntWithAggregatesFilter<"schedules"> | number
+  reminderAt?: Prisma.DateTimeWithAggregatesFilter<"schedules"> | Date | string
   reminderEmailSent?: Prisma.BoolWithAggregatesFilter<"schedules"> | boolean
   reminderWhatsappSent?: Prisma.BoolWithAggregatesFilter<"schedules"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"schedules"> | Date | string
@@ -258,6 +330,9 @@ export type schedulesScalarWhereWithAggregatesInput = {
 export type schedulesCreateInput = {
   id?: string
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -270,6 +345,9 @@ export type schedulesUncheckedCreateInput = {
   sessionId?: string | null
   userId?: string | null
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -278,6 +356,9 @@ export type schedulesUncheckedCreateInput = {
 export type schedulesUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -290,6 +371,9 @@ export type schedulesUncheckedUpdateInput = {
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -300,6 +384,9 @@ export type schedulesCreateManyInput = {
   sessionId?: string | null
   userId?: string | null
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -308,6 +395,9 @@ export type schedulesCreateManyInput = {
 export type schedulesUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -318,6 +408,9 @@ export type schedulesUncheckedUpdateManyInput = {
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -338,9 +431,16 @@ export type schedulesCountOrderByAggregateInput = {
   sessionId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
+  candidateName?: Prisma.SortOrder
+  reminderOffsetMinutes?: Prisma.SortOrder
+  reminderAt?: Prisma.SortOrder
   reminderEmailSent?: Prisma.SortOrder
   reminderWhatsappSent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type schedulesAvgOrderByAggregateInput = {
+  reminderOffsetMinutes?: Prisma.SortOrder
 }
 
 export type schedulesMaxOrderByAggregateInput = {
@@ -348,6 +448,9 @@ export type schedulesMaxOrderByAggregateInput = {
   sessionId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
+  candidateName?: Prisma.SortOrder
+  reminderOffsetMinutes?: Prisma.SortOrder
+  reminderAt?: Prisma.SortOrder
   reminderEmailSent?: Prisma.SortOrder
   reminderWhatsappSent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -358,9 +461,16 @@ export type schedulesMinOrderByAggregateInput = {
   sessionId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
+  candidateName?: Prisma.SortOrder
+  reminderOffsetMinutes?: Prisma.SortOrder
+  reminderAt?: Prisma.SortOrder
   reminderEmailSent?: Prisma.SortOrder
   reminderWhatsappSent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type schedulesSumOrderByAggregateInput = {
+  reminderOffsetMinutes?: Prisma.SortOrder
 }
 
 export type schedulesCreateNestedManyWithoutUserInput = {
@@ -450,6 +560,9 @@ export type schedulesUncheckedUpdateManyWithoutInterviewSessionNestedInput = {
 export type schedulesCreateWithoutUserInput = {
   id?: string
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -460,6 +573,9 @@ export type schedulesUncheckedCreateWithoutUserInput = {
   id?: string
   sessionId?: string | null
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -499,6 +615,9 @@ export type schedulesScalarWhereInput = {
   sessionId?: Prisma.UuidNullableFilter<"schedules"> | string | null
   userId?: Prisma.StringNullableFilter<"schedules"> | string | null
   scheduledAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
+  candidateName?: Prisma.StringFilter<"schedules"> | string
+  reminderOffsetMinutes?: Prisma.IntFilter<"schedules"> | number
+  reminderAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
   reminderEmailSent?: Prisma.BoolFilter<"schedules"> | boolean
   reminderWhatsappSent?: Prisma.BoolFilter<"schedules"> | boolean
   createdAt?: Prisma.DateTimeFilter<"schedules"> | Date | string
@@ -507,6 +626,9 @@ export type schedulesScalarWhereInput = {
 export type schedulesCreateWithoutInterviewSessionInput = {
   id?: string
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -517,6 +639,9 @@ export type schedulesUncheckedCreateWithoutInterviewSessionInput = {
   id?: string
   userId?: string | null
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -552,6 +677,9 @@ export type schedulesCreateManyUserInput = {
   id?: string
   sessionId?: string | null
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -560,6 +688,9 @@ export type schedulesCreateManyUserInput = {
 export type schedulesUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -570,6 +701,9 @@ export type schedulesUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -579,6 +713,9 @@ export type schedulesUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -588,6 +725,9 @@ export type schedulesCreateManyInterviewSessionInput = {
   id?: string
   userId?: string | null
   scheduledAt: Date | string
+  candidateName?: string
+  reminderOffsetMinutes?: number
+  reminderAt: Date | string
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: Date | string
@@ -596,6 +736,9 @@ export type schedulesCreateManyInterviewSessionInput = {
 export type schedulesUpdateWithoutInterviewSessionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -606,6 +749,9 @@ export type schedulesUncheckedUpdateWithoutInterviewSessionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -615,6 +761,9 @@ export type schedulesUncheckedUpdateManyWithoutInterviewSessionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidateName?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOffsetMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  reminderAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reminderEmailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reminderWhatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -627,6 +776,9 @@ export type schedulesSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   sessionId?: boolean
   userId?: boolean
   scheduledAt?: boolean
+  candidateName?: boolean
+  reminderOffsetMinutes?: boolean
+  reminderAt?: boolean
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: boolean
@@ -639,6 +791,9 @@ export type schedulesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   sessionId?: boolean
   userId?: boolean
   scheduledAt?: boolean
+  candidateName?: boolean
+  reminderOffsetMinutes?: boolean
+  reminderAt?: boolean
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: boolean
@@ -651,6 +806,9 @@ export type schedulesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   sessionId?: boolean
   userId?: boolean
   scheduledAt?: boolean
+  candidateName?: boolean
+  reminderOffsetMinutes?: boolean
+  reminderAt?: boolean
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: boolean
@@ -663,12 +821,15 @@ export type schedulesSelectScalar = {
   sessionId?: boolean
   userId?: boolean
   scheduledAt?: boolean
+  candidateName?: boolean
+  reminderOffsetMinutes?: boolean
+  reminderAt?: boolean
   reminderEmailSent?: boolean
   reminderWhatsappSent?: boolean
   createdAt?: boolean
 }
 
-export type schedulesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sessionId" | "userId" | "scheduledAt" | "reminderEmailSent" | "reminderWhatsappSent" | "createdAt", ExtArgs["result"]["schedules"]>
+export type schedulesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sessionId" | "userId" | "scheduledAt" | "candidateName" | "reminderOffsetMinutes" | "reminderAt" | "reminderEmailSent" | "reminderWhatsappSent" | "createdAt", ExtArgs["result"]["schedules"]>
 export type schedulesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   interviewSession?: boolean | Prisma.schedules$interviewSessionArgs<ExtArgs>
   user?: boolean | Prisma.schedules$userArgs<ExtArgs>
@@ -693,6 +854,9 @@ export type $schedulesPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     sessionId: string | null
     userId: string | null
     scheduledAt: Date
+    candidateName: string
+    reminderOffsetMinutes: number
+    reminderAt: Date
     reminderEmailSent: boolean
     reminderWhatsappSent: boolean
     createdAt: Date
@@ -1125,6 +1289,9 @@ export interface schedulesFieldRefs {
   readonly sessionId: Prisma.FieldRef<"schedules", 'String'>
   readonly userId: Prisma.FieldRef<"schedules", 'String'>
   readonly scheduledAt: Prisma.FieldRef<"schedules", 'DateTime'>
+  readonly candidateName: Prisma.FieldRef<"schedules", 'String'>
+  readonly reminderOffsetMinutes: Prisma.FieldRef<"schedules", 'Int'>
+  readonly reminderAt: Prisma.FieldRef<"schedules", 'DateTime'>
   readonly reminderEmailSent: Prisma.FieldRef<"schedules", 'Boolean'>
   readonly reminderWhatsappSent: Prisma.FieldRef<"schedules", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"schedules", 'DateTime'>
