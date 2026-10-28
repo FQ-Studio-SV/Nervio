@@ -55,6 +55,19 @@ export interface InterviewTurn {
   phase: InterviewPhase;
 }
 
+export interface CloseInterviewResponse {
+  sessionId: string;
+  status: "ended";
+  reportReady?: boolean;
+}
+
+export type InterviewEndReason = "manual" | "agent" | "poor_connection";
+
+export interface EndInterviewOptions {
+  reason?: InterviewEndReason;
+  skipEvaluation?: boolean;
+}
+
 export interface InterviewReport {
   sessionId: string;
   scoreGlobal: number;

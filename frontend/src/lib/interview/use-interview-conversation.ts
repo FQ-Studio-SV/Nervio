@@ -15,6 +15,40 @@ import type {
   OrbState,
 } from "./types";
 
+const POOR_CONNECTION_MESSAGE =
+  "Entrevista finalizada: la conexión no tuvo calidad suficiente para evaluar al candidato.";
+
+type BrowserNetworkInformation = EventTarget & {
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+};
+
+type NavigatorWithConnection = Navigator & {
+  connection?: BrowserNetworkInformation;
+  mozConnection?: BrowserNetworkInformation;
+  webkitConnection?: BrowserNetworkInformation;
+};
+
+function getNetworkConnection(): BrowserNetworkInformation | null {
+  const nav = navigator as NavigatorWithConnection;
+  return nav.connection ?? nav.mozConnection ?? nav.webkitConnection ?? null;
+}
+
+function hasPoorConnection(): boolean {
+  if (!navigator.onLine) return true;
+
+  const connection = getNetworkConnection();
+  if (!connection) return false;
+
+  return (
+    connection.effectiveType === "slow-2g" ||
+    connection.effectiveType === "2g" ||
+    (typeof connection.downlink === "number" && connection.downlink < 0.5) ||
+    (typeof connection.rtt === "number" && connection.rtt > 1200)
+  );
+}
+
 function buildContext(setup: InterviewSetupInput): string {
   const parts = [
     `Entrevista simulada en español.`,
@@ -35,6 +69,57 @@ function phaseToOrb(phase: InterviewPhase, isSpeaking: boolean): OrbState {
   if (isSpeaking || phase === "speaking") return "speaking";
   if (phase === "listening") return "listening";
   return "idle";
+}
+
+function isSuccessEndEvent(raw: unknown): boolean {
+  if (typeof raw === "string") {
+    try {
+      return isSuccessEndEvent(JSON.parse(raw) as unknown);
+    } catch {
+      return false;
+    }
+  }
+
+  if (!raw || typeof raw !== "object") return false;
+
+  const record = raw as Record<string, unknown>;
+  const successEnd = record.success_end;
+
+  if (successEnd && typeof successEnd === "object") {
+    const endRecord = successEnd as Record<string, unknown>;
+    return endRecord.type === "end";
+  }
+
+  return record.type === "end" && record.label === "Finalizar llamada";
+}
+
+function extractConversationId(raw: unknown): string | null {
+  if (typeof raw === "string") {
+    try {
+      return extractConversationId(JSON.parse(raw) as unknown);
+    } catch {
+      return null;
+    }
+  }
+
+  if (!raw || typeof raw !== "object") return null;
+
+  const record = raw as Record<string, unknown>;
+  const direct =
+    typeof record.conversation_id === "string"
+      ? record.conversation_id
+      : typeof record.conversationId === "string"
+        ? record.conversationId
+        : null;
+
+  if (direct) return direct;
+
+  for (const value of Object.values(record)) {
+    const nested = extractConversationId(value);
+    if (nested) return nested;
+  }
+
+  return null;
 }
 
 function extractMessagePayload(raw: unknown): {
@@ -75,8 +160,30 @@ export function useInterviewConversation(sessionId: string) {
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [phase, setPhase] = useState<InterviewPhase>("connecting");
   const [error, setError] = useState<string | null>(null);
+  const [endEventReceived, setEndEventReceived] = useState(false);
+  const [agentEnded, setAgentEnded] = useState(false);
+  const [agentReportReady, setAgentReportReady] = useState(false);
+  const [endedByPoorConnection, setEndedByPoorConnection] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const startedRef = useRef(false);
   const contextSentRef = useRef(false);
+  const endPersistedRef = useRef(false);
+  const expectedDisconnectRef = useRef(false);
+  const poorConnectionHandledRef = useRef(false);
+
+  const markPoorConnection = useCallback(() => {
+    if (poorConnectionHandledRef.current) return;
+
+    poorConnectionHandledRef.current = true;
+    setEndedByPoorConnection(true);
+    setError(POOR_CONNECTION_MESSAGE);
+    setPhase("ended");
+
+    const session = getSession(sessionId);
+    if (session) {
+      saveSession({ ...session, status: "ended" });
+    }
+  }, [sessionId]);
 
   const appendMessage = useCallback(
     (role: "interviewer" | "candidate", text: string) => {
@@ -116,14 +223,28 @@ export function useInterviewConversation(sessionId: string) {
   );
 
   const conversation = useConversation({
-    onConnect: () => {
+    onConnect: ({ conversationId }) => {
+      setConversationId(conversationId);
       setPhase("listening");
       setError(null);
     },
     onDisconnect: () => {
-      setPhase((current) => (current === "ended" ? current : "ended"));
+      if (expectedDisconnectRef.current) {
+        setPhase((current) => (current === "ended" ? current : "ended"));
+        return;
+      }
+
+      markPoorConnection();
     },
     onMessage: (message) => {
+      const messageConversationId = extractConversationId(message);
+      if (messageConversationId) setConversationId(messageConversationId);
+
+      if (isSuccessEndEvent(message)) {
+        setEndEventReceived(true);
+        return;
+      }
+
       const parsed = extractMessagePayload(message);
       if (parsed) appendMessage(parsed.role, parsed.text);
     },
@@ -148,11 +269,63 @@ export function useInterviewConversation(sessionId: string) {
     message,
   } = conversation;
 
+  const closeForPoorConnection = useCallback(() => {
+    expectedDisconnectRef.current = true;
+    markPoorConnection();
+    endSession();
+  }, [endSession, markPoorConnection]);
+
   useEffect(() => {
     if (message?.trim()) {
       setCurrentQuestion(message.trim());
     }
   }, [message]);
+
+  useEffect(() => {
+    const handleConnectionChange = () => {
+      if (hasPoorConnection()) {
+        closeForPoorConnection();
+      }
+    };
+
+    window.addEventListener("offline", handleConnectionChange);
+    const connection = getNetworkConnection();
+    connection?.addEventListener("change", handleConnectionChange);
+    handleConnectionChange();
+
+    return () => {
+      window.removeEventListener("offline", handleConnectionChange);
+      connection?.removeEventListener("change", handleConnectionChange);
+    };
+  }, [closeForPoorConnection]);
+
+  useEffect(() => {
+    if (!endEventReceived || endPersistedRef.current) return;
+    endPersistedRef.current = true;
+
+    const closeCall = async () => {
+      setPhase("ended");
+      expectedDisconnectRef.current = true;
+      endSession();
+      const session = getSession(sessionId);
+      if (session) {
+        saveSession({ ...session, status: "ended" });
+      }
+
+      try {
+        const result = await interviewService.end(sessionId, conversationId, {
+          reason: "agent",
+        });
+        setAgentReportReady(Boolean(result.reportReady));
+      } catch (err) {
+        console.error("No se pudo cerrar la entrevista sin score:", err);
+      } finally {
+        setAgentEnded(true);
+      }
+    };
+
+    void closeCall();
+  }, [conversationId, endEventReceived, endSession, sessionId]);
 
   useEffect(() => {
     if (status !== "connected" || !setup || contextSentRef.current) return;
@@ -167,6 +340,11 @@ export function useInterviewConversation(sessionId: string) {
     const connect = async () => {
       try {
         setPhase("connecting");
+        if (hasPoorConnection()) {
+          closeForPoorConnection();
+          return;
+        }
+
         await navigator.mediaDevices.getUserMedia({ audio: true });
 
         const response = await fetch("/api/elevenlabs/token");
@@ -190,9 +368,10 @@ export function useInterviewConversation(sessionId: string) {
     void connect();
 
     return () => {
+      expectedDisconnectRef.current = true;
       endSession();
     };
-  }, [setup, startSession, endSession]);
+  }, [setup, startSession, endSession, closeForPoorConnection]);
 
   const toggleMute = useCallback(() => {
     setMuted(!isMuted);
@@ -200,6 +379,7 @@ export function useInterviewConversation(sessionId: string) {
 
   const endInterview = useCallback(() => {
     setPhase("ended");
+    expectedDisconnectRef.current = true;
     endSession();
     const session = getSession(sessionId);
     if (session) {
@@ -226,6 +406,10 @@ export function useInterviewConversation(sessionId: string) {
     isBusy: status === "connecting",
     error,
     connectionLabel,
+    agentEnded,
+    agentReportReady,
+    endedByPoorConnection,
+    conversationId,
     toggleMute,
     endInterview,
   };

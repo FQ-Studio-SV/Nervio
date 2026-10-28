@@ -1,14 +1,25 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { buildLocalEvaluation, toInterviewReport } from "@/lib/interview/reporting";
+import {
+  fetchElevenLabsEvaluation,
+  rememberElevenLabsConversation,
+  saveEvaluation,
+} from "@/lib/interview/elevenlabs-analysis";
 import { prisma } from "@/lib/prisma";
 
 interface RouteContext {
   params: Promise<{ sessionId: string }>;
 }
 
-export async function POST(_request: Request, { params }: RouteContext) {
+const endSchema = z.object({
+  conversationId: z.string().min(1).optional().nullable(),
+  reason: z.enum(["manual", "agent", "poor_connection"]).optional(),
+  skipEvaluation: z.boolean().optional(),
+});
+
+export async function POST(request: Request, { params }: RouteContext) {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -19,23 +30,17 @@ export async function POST(_request: Request, { params }: RouteContext) {
     }
 
     const { sessionId } = await params;
+    const parsed = endSchema.safeParse(await request.json().catch(() => ({})));
+    const payload = parsed.success ? parsed.data : {};
+    const conversationId = payload.conversationId ?? null;
     const interview = await prisma.interviewSession.findFirst({
       where: { id: sessionId, userId: session.user.id },
-      include: {
-        responses: { orderBy: { createdAt: "asc" } },
-        user: true,
-      },
+      select: { id: true },
     });
 
     if (!interview) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
     }
-
-    const localEvaluation = buildLocalEvaluation(
-      interview.responses
-        .map((response) => response.responseText?.trim())
-        .filter((text): text is string => Boolean(text)),
-    );
 
     await prisma.interviewSession.update({
       where: { id: sessionId },
@@ -45,37 +50,23 @@ export async function POST(_request: Request, { params }: RouteContext) {
       },
     });
 
-    const evaluation = await prisma.evaluations.upsert({
-      where: { sessionId },
-      create: {
-        sessionId,
-        scoreGlobal: localEvaluation.scoreGlobal,
-        scoreClarity: localEvaluation.scoreClarity,
-        scoreKnowledge: localEvaluation.scoreKnowledge,
-        scoreConfidence: localEvaluation.scoreConfidence,
-        scoreStructure: localEvaluation.scoreStructure,
-        strengths: JSON.stringify(localEvaluation.strengths),
-        weaknesses: JSON.stringify(localEvaluation.weaknesses),
-        recommendation: localEvaluation.recommendation,
-      },
-      update: {
-        scoreGlobal: localEvaluation.scoreGlobal,
-        scoreClarity: localEvaluation.scoreClarity,
-        scoreKnowledge: localEvaluation.scoreKnowledge,
-        scoreConfidence: localEvaluation.scoreConfidence,
-        scoreStructure: localEvaluation.scoreStructure,
-        strengths: JSON.stringify(localEvaluation.strengths),
-        weaknesses: JSON.stringify(localEvaluation.weaknesses),
-        recommendation: localEvaluation.recommendation,
-      },
-    });
+    if (conversationId) {
+      await rememberElevenLabsConversation(sessionId, conversationId);
+    }
 
-    return NextResponse.json(
-      toInterviewReport({
-        ...interview,
-        evaluations: evaluation,
-      }),
-    );
+    const evaluation = conversationId && !payload.skipEvaluation
+      ? await fetchElevenLabsEvaluation(conversationId)
+      : null;
+
+    if (evaluation) {
+      await saveEvaluation(sessionId, evaluation);
+    }
+
+    return NextResponse.json({
+      sessionId,
+      status: "ended",
+      reportReady: Boolean(evaluation),
+    });
   } catch (error) {
     console.error("POST /api/interview/[sessionId]/end error:", error);
     return NextResponse.json(

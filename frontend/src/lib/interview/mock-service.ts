@@ -11,6 +11,7 @@ import {
   saveSession,
 } from "./session-storage";
 import type {
+  CloseInterviewResponse,
   InterviewReport,
   InterviewSetupInput,
   InterviewTurn,
@@ -233,13 +234,13 @@ export const mockInterviewService: InterviewService = {
     };
   },
 
-  async end(sessionId) {
+  async end(sessionId): Promise<CloseInterviewResponse> {
     await delay(500);
     const session = getSession(sessionId);
     if (!session) throw new Error("Sesión no encontrada");
     session.status = "ended";
     saveSession(session);
-    return generateMockReport(session);
+    return { sessionId, status: "ended", reportReady: false };
   },
 
   async getReport(sessionId) {
