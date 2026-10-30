@@ -95,11 +95,22 @@ export interface PersistedInterviewSession {
 
 export interface ScheduleInterviewInput extends InterviewSetupInput {
   scheduledAt: string;
+  reminderOffsetMinutes: number;
 }
 
 export interface ScheduleInterviewResponse {
   sessionId: string;
   scheduleId: string;
+  scheduledAt: string;
+  emailSent: boolean;
+  joinUrl: string;
+}
+
+export type UpdateScheduleInput = ScheduleInterviewInput;
+
+export interface UpdateScheduleResponse {
+  scheduleId: string;
+  sessionId: string;
   scheduledAt: string;
 }
 

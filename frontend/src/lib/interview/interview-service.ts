@@ -8,6 +8,8 @@ import type {
   ScheduleInterviewInput,
   ScheduleInterviewResponse,
   StartInterviewResponse,
+  UpdateScheduleInput,
+  UpdateScheduleResponse,
 } from "./types";
 
 export interface InterviewService {
@@ -25,4 +27,8 @@ export interface InterviewService {
   getOpeningQuestion(sessionId: string): Promise<string>;
   getSession(sessionId: string): Promise<PersistedInterviewSession>;
   schedule(input: ScheduleInterviewInput): Promise<ScheduleInterviewResponse>;
+  updateSchedule(
+    scheduleId: string,
+    input: UpdateScheduleInput,
+  ): Promise<UpdateScheduleResponse>;
 }
