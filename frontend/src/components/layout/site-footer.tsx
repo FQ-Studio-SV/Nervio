@@ -5,11 +5,20 @@ export function SiteFooter() {
   return (
     <footer className="relative z-10 w-full border-t border-white/5 px-6 py-12 lg:px-20">
       <div className="container mx-auto flex flex-col items-center justify-between gap-6 md:flex-row">
-        <div className="flex items-center gap-2 opacity-50 grayscale">
-          <IconBrain className="size-5 text-foreground" stroke={1.5} />
-          <span className="font-[family-name:var(--font-heading)] text-sm font-bold">
-            Nervio AI
-          </span>
+        <div className="flex flex-col items-center gap-2 md:items-start">
+          <div className="flex items-center gap-2 opacity-50 grayscale">
+            <IconBrain className="size-5 text-foreground" stroke={1.5} />
+            <span className="font-[family-name:var(--font-heading)] text-sm font-bold">
+              Nervio AI
+            </span>
+          </div>
+          <p className="max-w-sm text-center text-xs leading-relaxed text-muted-foreground md:text-left">
+            Nervio está enlazado con la{" "}
+            <span className="font-medium text-foreground">
+              Universidad Francisco Gavidia (UFG)
+            </span>{" "}
+            para apoyar la preparación profesional de sus estudiantes.
+          </p>
         </div>
         <p className="text-xs text-muted-foreground">
           © {new Date().getFullYear()} Nervio AI. Forjado para el éxito
