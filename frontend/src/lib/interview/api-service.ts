@@ -15,6 +15,7 @@ import type {
   ScheduleInterviewInput,
   ScheduleInterviewResponse,
   StartInterviewResponse,
+  UpdateScheduleResponse,
 } from "./types";
 
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -117,6 +118,16 @@ export const apiInterviewService: InterviewService = {
   ): Promise<ScheduleInterviewResponse> {
     return apiJson<ScheduleInterviewResponse>("/api/interview/schedule", {
       method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async updateSchedule(
+    scheduleId: string,
+    input: ScheduleInterviewInput,
+  ): Promise<UpdateScheduleResponse> {
+    return apiJson(`/api/interview/schedule/${scheduleId}`, {
+      method: "PATCH",
       body: JSON.stringify(input),
     });
   },

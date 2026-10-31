@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
@@ -27,6 +28,15 @@ import {
   INTERVIEW_TYPE_OPTIONS,
   interviewService,
 } from "@/lib/interview";
+import {
+  ReminderOffsetField,
+  useReminderOffsetState,
+} from "@/components/interview/reminder-offset-field";
+import {
+  REMINDER_OFFSET_MAX_MINUTES,
+  REMINDER_OFFSET_MIN,
+  formatReminderOffset,
+} from "@/lib/interview/reminder";
 import type { InterviewType } from "@/lib/interview/types";
 import {
   type InterviewSetupFormValues,
@@ -62,10 +72,15 @@ export function InterviewSetupForm({
   const router = useRouter();
   const [actionMode, setActionMode] = useState<"now" | "schedule">("now");
   const [scheduledAt, setScheduledAt] = useState("");
+  const reminderState = useReminderOffsetState(60);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
-  const [scheduleConfirmation, setScheduleConfirmation] = useState<string | null>(
-    null,
-  );
+  const [reminderError, setReminderError] = useState<string | null>(null);
+  const [scheduleConfirmation, setScheduleConfirmation] = useState<{
+    formattedDate: string;
+    emailSent: boolean;
+    joinUrl: string;
+    reminderLabel: string;
+  } | null>(null);
   const {
     register,
     handleSubmit,
@@ -88,6 +103,7 @@ export function InterviewSetupForm({
 
   const onSubmit = async (values: InterviewSetupFormValues) => {
     setScheduleError(null);
+    setReminderError(null);
     setScheduleConfirmation(null);
     clearErrors("root");
 
@@ -99,16 +115,43 @@ export function InterviewSetupForm({
           return;
         }
 
+        const reminderOffsetMinutes = reminderState.offsetMinutes;
+        const customNumber = Number(reminderState.customValue);
+
+        if (
+          (reminderState.mode === "custom" &&
+            (!Number.isFinite(customNumber) || customNumber <= 0)) ||
+          reminderOffsetMinutes < REMINDER_OFFSET_MIN ||
+          reminderOffsetMinutes > REMINDER_OFFSET_MAX_MINUTES
+        ) {
+          setReminderError("Indica un recordatorio válido.");
+          return;
+        }
+
+        const reminderAt =
+          date.getTime() - reminderOffsetMinutes * 60 * 1000;
+        if (reminderAt <= Date.now()) {
+          setReminderError(
+            "Ese aviso quedaría en el pasado. Elige una cita más lejana o un margen más corto.",
+          );
+          return;
+        }
+
         const schedule = await interviewService.schedule({
           ...values,
           scheduledAt,
+          reminderOffsetMinutes,
         });
-        setScheduleConfirmation(
-          `Cita agendada para ${new Intl.DateTimeFormat("es", {
+        const reminderLabel = formatReminderOffset(reminderOffsetMinutes);
+        setScheduleConfirmation({
+          formattedDate: new Intl.DateTimeFormat("es", {
             dateStyle: "medium",
             timeStyle: "short",
-          }).format(new Date(schedule.scheduledAt))}.`,
-        );
+          }).format(new Date(schedule.scheduledAt)),
+          emailSent: schedule.emailSent,
+          joinUrl: schedule.joinUrl,
+          reminderLabel,
+        });
         return;
       }
 
@@ -325,15 +368,42 @@ export function InterviewSetupForm({
             </Field>
           ) : null}
 
+          {actionMode === "schedule" ? (
+            <ReminderOffsetField
+              state={reminderState}
+              disabled={isSubmitting}
+              error={reminderError}
+              onClearError={() => setReminderError(null)}
+            />
+          ) : null}
+
           {errors.root && <FieldError>{errors.root.message}</FieldError>}
 
           {scheduleConfirmation ? (
-            <p
-              className="rounded-xl border border-primary/20 bg-primary/10 p-3 text-center text-sm text-primary"
+            <div
+              className="rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm text-primary"
               aria-live="polite"
             >
-              {scheduleConfirmation}
-            </p>
+              <p className="text-center font-medium">
+                Cita agendada para {scheduleConfirmation.formattedDate}.
+              </p>
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                {scheduleConfirmation.emailSent
+                  ? `Te enviamos la confirmación. El recordatorio sale ${scheduleConfirmation.reminderLabel}.`
+                  : "La cita quedó guardada, pero no pudimos enviar la confirmación. El recordatorio sigue programado."}
+              </p>
+              <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+                <Button render={<Link href={scheduleConfirmation.joinUrl} />}>
+                  Entrar a la entrevista
+                </Button>
+                <Button
+                  variant="outline"
+                  render={<Link href="/interview/schedules" />}
+                >
+                  Ver agenda
+                </Button>
+              </div>
+            </div>
           ) : null}
 
           <Button

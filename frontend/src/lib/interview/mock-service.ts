@@ -274,6 +274,20 @@ export const mockInterviewService: InterviewService = {
       sessionId,
       scheduleId: crypto.randomUUID(),
       scheduledAt: input.scheduledAt,
+      emailSent: false,
+      joinUrl: `/interview/${sessionId}`,
+    };
+  },
+
+  async updateSchedule(
+    scheduleId: string,
+    input: ScheduleInterviewInput,
+  ): Promise<import("./types").UpdateScheduleResponse> {
+    await delay(300);
+    return {
+      scheduleId,
+      sessionId: crypto.randomUUID(),
+      scheduledAt: input.scheduledAt,
     };
   },
 };

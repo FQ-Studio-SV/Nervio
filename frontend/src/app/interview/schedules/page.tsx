@@ -1,9 +1,9 @@
 import Link from "next/link";
 import {
-  IconBrandWhatsapp,
   IconCalendarEvent,
   IconClock,
   IconMail,
+  IconPencil,
   IconPlus,
 } from "@tabler/icons-react";
 import { AuthBackground } from "@/components/layout/auth-background";
@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { INTERVIEW_TYPE_OPTIONS } from "@/lib/interview";
+import { formatReminderOffset } from "@/lib/interview/reminder";
 import { requireAuth } from "@/lib/auth-server";
 import { prisma } from "@/lib/prisma";
 
@@ -44,7 +45,7 @@ export default async function InterviewSchedulesPage() {
             Entrevistas agendadas
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Visualiza las citas creadas para que N8N gestione recordatorios.
+            Tus citas guardadas y el enlace directo para entrar a cada entrevista.
           </p>
         </div>
 
@@ -102,31 +103,32 @@ export default async function InterviewSchedulesPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                      <p className="text-xs uppercase tracking-wide">Schedule ID</p>
-                      <p className="mt-1 break-all font-mono text-xs text-foreground">
-                        {schedule.id}
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                      <p className="text-xs uppercase tracking-wide">Session ID</p>
-                      <p className="mt-1 break-all font-mono text-xs text-foreground">
-                        {schedule.sessionId ?? "Sin sesión"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap gap-2 text-xs">
                     <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground">
                       <IconMail className="size-4" />
-                      Email: {schedule.reminderEmailSent ? "enviado" : "pendiente"}
+                      Recordatorio ({formatReminderOffset(schedule.reminderOffsetMinutes)}):{" "}
+                      {schedule.reminderEmailSent ? "enviado" : "pendiente"}
                     </span>
-                    <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground">
-                      <IconBrandWhatsapp className="size-4" />
-                      WhatsApp:{" "}
-                      {schedule.reminderWhatsappSent ? "enviado" : "pendiente"}
-                    </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {state === "Próxima" ? (
+                        <Button
+                          variant="outline"
+                          render={
+                            <Link href={`/interview/schedules/${schedule.id}/edit`} />
+                          }
+                        >
+                          <IconPencil className="size-4" />
+                          Editar
+                        </Button>
+                      ) : null}
+                      {schedule.sessionId ? (
+                        <Button render={<Link href={`/interview/${schedule.sessionId}`} />}>
+                          Entrar
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
                 </article>
               );

@@ -2,8 +2,13 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  buildInterviewJoinUrl,
+  sendScheduleConfirmationEmail,
+} from "@/lib/email/schedule-confirmation";
+import type { InterviewType, ScheduleInterviewResponse } from "@/lib/interview/types";
+import { reminderAtFrom } from "@/lib/interview/reminder";
 import { scheduleInterviewSchema } from "@/lib/validations/interview";
-import type { ScheduleInterviewResponse } from "@/lib/interview/types";
 
 async function notifySchedule(sessionId: string, payload: Record<string, string>) {
   const endpoint = process.env.N8N_WEBHOOK_SCHEDULE_NOTIFICATION_URL;
@@ -62,6 +67,10 @@ export async function POST(request: Request) {
     }
 
     const scheduledAt = new Date(parsed.data.scheduledAt);
+    const reminderAt = reminderAtFrom(
+      scheduledAt,
+      parsed.data.reminderOffsetMinutes,
+    );
     const interview = await prisma.interviewSession.create({
       data: {
         userId: session.user.id,
@@ -76,6 +85,9 @@ export async function POST(request: Request) {
           create: {
             userId: session.user.id,
             scheduledAt,
+            candidateName: parsed.data.candidateName,
+            reminderOffsetMinutes: parsed.data.reminderOffsetMinutes,
+            reminderAt,
           },
         },
       },
@@ -98,12 +110,35 @@ export async function POST(request: Request) {
       candidate_name: parsed.data.candidateName,
       role: parsed.data.role,
       scheduled_at: scheduledAt.toISOString(),
+      reminder_offset_minutes: String(parsed.data.reminderOffsetMinutes),
+      reminder_at: reminderAt.toISOString(),
     });
+
+    const joinUrl = buildInterviewJoinUrl(interview.id);
+    let emailSent = false;
+
+    const mailResult = await sendScheduleConfirmationEmail({
+      to: session.user.email,
+      candidateName: parsed.data.candidateName,
+      role: parsed.data.role,
+      interviewType: parsed.data.interviewType as InterviewType,
+      scheduledAt,
+      sessionId: interview.id,
+      scheduleId: schedule.id,
+    });
+
+    if (mailResult.ok) {
+      emailSent = true;
+    } else {
+      console.warn("Schedule confirmation email:", mailResult.error);
+    }
 
     const response: ScheduleInterviewResponse = {
       sessionId: interview.id,
       scheduleId: schedule.id,
       scheduledAt: scheduledAt.toISOString(),
+      emailSent,
+      joinUrl,
     };
 
     return NextResponse.json(response);
