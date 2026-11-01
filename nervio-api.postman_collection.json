@@ -1,0 +1,191 @@
+{
+  "info": {
+    "name": "Nervio API — Fase 3 (Sprint 1)",
+    "_postman_id": "b1e1b0a0-0000-4000-8000-nervio000001",
+    "description": "Colección de pruebas manuales de la API de Nervio (Next.js Route Handlers). Flujo recomendado: 1) Auth > Sign Up o Sign In (Postman guarda la cookie de sesión HttpOnly automáticamente en su cookie jar para {{baseUrl}}). 2) Interview > Start (copiar sessionId a la variable). 3) Messages / End / Report. 4) Schedule. Compatible con Postman y Thunder Client; importable también en Insomnia. Autenticación por cookie de sesión (Better Auth), no por token en header.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "sessionId", "value": "" },
+    { "key": "scheduleId", "value": "" },
+    { "key": "cronSecret", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up (email/password)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/sign-up/email", "host": ["{{baseUrl}}"], "path": ["api", "auth", "sign-up", "email"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Candidata Demo\",\n  \"email\": \"demo@nervio.dev\",\n  \"password\": \"Nervio#2026\"\n}"
+            },
+            "description": "Registra un candidato. Better Auth crea user + account (hash scrypt) y, con autoSignIn, emite la cookie de sesión."
+          }
+        },
+        {
+          "name": "Sign In (email/password)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/sign-in/email", "host": ["{{baseUrl}}"], "path": ["api", "auth", "sign-in", "email"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"demo@nervio.dev\",\n  \"password\": \"Nervio#2026\"\n}"
+            },
+            "description": "Inicia sesión. La cookie HttpOnly resultante queda en el cookie jar de Postman y autentica el resto de peticiones."
+          }
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/get-session", "host": ["{{baseUrl}}"], "path": ["api", "auth", "get-session"] },
+            "description": "Devuelve la sesión y el usuario actuales si la cookie es válida."
+          }
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/sign-out", "host": ["{{baseUrl}}"], "path": ["api", "auth", "sign-out"] },
+            "body": { "mode": "raw", "raw": "{}" },
+            "description": "Cierra la sesión e invalida la cookie."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Interview",
+      "item": [
+        {
+          "name": "Start interview",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/interview/start", "host": ["{{baseUrl}}"], "path": ["api", "interview", "start"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Frontend Developer\",\n  \"candidateName\": \"Candidata Demo\",\n  \"level\": \"mid\",\n  \"language\": \"es\",\n  \"interviewType\": \"tecnico\",\n  \"extraContext\": \"Dos años de experiencia construyendo SPAs con React.\",\n  \"stack\": \"React, Next.js, TypeScript\"\n}"
+            },
+            "description": "Crea la InterviewSession, genera preguntas (N8N o fallback) y sintetiza el primer audio. Copiar sessionId de la respuesta a la variable {{sessionId}}."
+          }
+        },
+        {
+          "name": "Post message (turn)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/interview/{{sessionId}}/messages", "host": ["{{baseUrl}}"], "path": ["api", "interview", "{{sessionId}}", "messages"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"candidate\",\n  \"text\": \"Lideré el frontend de un panel de métricas en Next.js.\"\n}"
+            },
+            "description": "Persiste un turno (interviewer = pregunta, candidate = respuesta)."
+          }
+        },
+        {
+          "name": "Get session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/interview/{{sessionId}}", "host": ["{{baseUrl}}"], "path": ["api", "interview", "{{sessionId}}"] },
+            "description": "Recupera la sesión con preguntas, respuestas y datos de setup (solo del propietario)."
+          }
+        },
+        {
+          "name": "End interview",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/interview/{{sessionId}}/end", "host": ["{{baseUrl}}"], "path": ["api", "interview", "{{sessionId}}", "end"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": null,\n  \"reason\": \"manual\",\n  \"skipEvaluation\": true\n}"
+            },
+            "description": "Finaliza la sesión (status=ended). Con conversationId de ElevenLabs dispara la evaluación."
+          }
+        },
+        {
+          "name": "Get report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/interview/{{sessionId}}/report", "host": ["{{baseUrl}}"], "path": ["api", "interview", "{{sessionId}}", "report"] },
+            "description": "Devuelve scores, fortalezas, debilidades y recomendación. 404 si aún no hay evaluación."
+          }
+        },
+        {
+          "name": "List reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/interview/reports", "host": ["{{baseUrl}}"], "path": ["api", "interview", "reports"] },
+            "description": "Historial de entrevistas finalizadas del usuario autenticado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schedule",
+      "item": [
+        {
+          "name": "Create schedule",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/interview/schedule", "host": ["{{baseUrl}}"], "path": ["api", "interview", "schedule"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Frontend Developer\",\n  \"candidateName\": \"Candidata Demo\",\n  \"level\": \"mid\",\n  \"language\": \"es\",\n  \"interviewType\": \"tecnico\",\n  \"extraContext\": \"Repaso de React antes de la entrevista real.\",\n  \"stack\": \"React, Next.js\",\n  \"scheduledAt\": \"2026-12-01T15:00:00.000Z\",\n  \"reminderOffsetMinutes\": 60\n}"
+            },
+            "description": "Agenda una entrevista futura, envía correo de confirmación (Resend) y copia scheduleId a {{scheduleId}}."
+          }
+        },
+        {
+          "name": "Update schedule",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/interview/schedule/{{scheduleId}}", "host": ["{{baseUrl}}"], "path": ["api", "interview", "schedule", "{{scheduleId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Frontend Developer\",\n  \"candidateName\": \"Candidata Demo\",\n  \"level\": \"senior\",\n  \"language\": \"es\",\n  \"interviewType\": \"agresivo\",\n  \"extraContext\": \"Cambio a modo estrés y nivel senior.\",\n  \"stack\": \"React, Next.js\",\n  \"scheduledAt\": \"2026-12-02T16:00:00.000Z\",\n  \"reminderOffsetMinutes\": 1440\n}"
+            },
+            "description": "Edita una cita futura; recalcula el recordatorio y reinicia el envío si cambió el horario."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Integraciones",
+      "item": [
+        {
+          "name": "ElevenLabs conversation token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/elevenlabs/token", "host": ["{{baseUrl}}"], "path": ["api", "elevenlabs", "token"] },
+            "description": "Emite un token efímero firmado para que el cliente abra el WebSocket con el agente sin exponer la API key."
+          }
+        },
+        {
+          "name": "Cron reminders (manual)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{cronSecret}}" }],
+            "url": { "raw": "{{baseUrl}}/api/cron/reminders", "host": ["{{baseUrl}}"], "path": ["api", "cron", "reminders"] },
+            "description": "Dispara el envío de recordatorios pendientes. Requiere Authorization: Bearer {{cronSecret}} (CRON_SECRET). Lo invoca Vercel Cron en producción."
+          }
+        }
+      ]
+    }
+  ]
+}
