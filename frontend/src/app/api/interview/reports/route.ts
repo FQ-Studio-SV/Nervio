@@ -27,9 +27,10 @@ export async function GET() {
       sessionId: interview.id,
       role: interview.role,
       interviewType: interview.interviewType as InterviewReportSummary["interviewType"],
-      scoreGlobal: interview.evaluations?.scoreGlobal
-        ? Number(interview.evaluations.scoreGlobal)
-        : null,
+      scoreGlobal:
+        interview.evaluations?.scoreGlobal != null
+          ? Number(interview.evaluations.scoreGlobal)
+          : null,
       status: interview.status,
       endedAt: interview.endedAt?.toISOString() ?? null,
       createdAt: interview.createdAt.toISOString(),
